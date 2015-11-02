@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd
+		http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	
+	<jee:jndi-lookup id="defaultEnv" jndi-name="applicationDefaultEnv" default-value="qua" 
+		resource-ref="true" expected-type="java.lang.String" />
+		
+	<beans:bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+		<beans:property name="locations">
+			<beans:list>
+				<beans:value>classpath:properties/all/docu-sign.properties</beans:value>
+				<beans:value>classpath:properties/#{@systemProperties['os.name'].indexOf('Windows') >= 0 ? 'local' : defaultEnv}/docu-sign.properties</beans:value>
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+	
+	<mvc:annotation-driven/>
+	
+	<context:component-scan base-package="com.stillwaterinsurance.**" scoped-proxy="targetClass"/>
+		
+	
+	<!--
+		CSRF protection. Here we only include the CsrfFilter instead of all of Spring Security.
+		See http://docs.spring.io/spring-security/site/docs/3.2.x/reference/htmlsingle/#csrf for more information on
+		Spring Security's CSRF protection
+	-->
+<!-- 	<beans:bean id="csrfFilter" class="org.springframework.security.web.csrf.CsrfFilter"> -->
+<!-- 		<beans:constructor-arg> -->
+<!-- 		<beans:bean class="org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository"/> -->
+<!-- 		</beans:constructor-arg> -->
+<!-- 	</beans:bean> -->
+	<!--
+		Provides automatic CSRF token inclusion when using Spring MVC Form tags or Thymeleaf. See
+		http://localhost:8080/#forms and form.jsp for examples
+	-->
+<!-- 	<beans:bean id="requestDataValueProcessor" class="org.springframework.security.web.servlet.support.csrf.CsrfRequestDataValueProcessor"/> -->
+	
+	<!-- Filter that is hit on every request -->
+	<beans:bean id="requestFilter" class="com.stillwaterinsurance.docusign.filter.RequestFilter" />
+
+	<beans:bean id="mailSender"
+		class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<!-- SMTP settings -->
+		<beans:property name="host" value="mail" />
+		<beans:property name="javaMailProperties">
+			<!-- additional properties specific to JavaMail -->
+			<beans:props>
+				<beans:prop key="mail.from">noreply@stillwater.com</beans:prop>
+				<beans:prop key="mail.transport.protocol">smtp</beans:prop>
+				<beans:prop key="mail.smtp.auth">false</beans:prop>
+				<beans:prop key="mail.smtp.starttls.enable">true</beans:prop>
+			</beans:props>
+		</beans:property>
+	</beans:bean>
+	
+
+</beans:beans>

@@ -1,0 +1,123 @@
+buildscript {
+    repositories {
+        //required for download
+        mavenCentral()
+        
+        //required for cargo and jshint
+        jcenter()
+        
+        //required for custom stillwater plugins
+        maven { url 'http://nexus.stillwaterinsurance.com/content/repositories/stillwater-release' }
+    }
+    dependencies {
+        //gradle js plugin, needed to run jshint
+        classpath 'com.eriwen:gradle-js-plugin:1.12.1'
+        
+        //required for download
+        classpath 'de.undercouch:gradle-download-task:1.0'
+        
+        //required for cargo
+        classpath 'org.gradle.api.plugins:gradle-cargo-plugin:1.1'
+        
+        //stillwater plugin
+        classpath 'com.stillwaterinsurance:gradle-gerrit-plugin:1.0.5'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'maven'
+apply plugin: 'eclipse'
+apply plugin: 'stillwatereclipse' //stillwater plugin
+
+defaultTasks 'tasks'
+
+archivesBaseName = 'DocuSign'
+group = 'com.stillwaterinsurance'
+
+description = """DocuSign"""
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+project.ext {  
+    nexusUrl = 'http://nexus.stillwaterinsurance.com/content/repositories'
+    nexususer = 'snapshot-user'
+    nexuspassword = 'stillwaterci'
+} 
+
+//see if we got a username/password from command line
+if(hasProperty('password')){
+    project.ext.nexuspassword = getProperty('password')
+}
+if(hasProperty('user')){
+    project.ext.nexususer = getProperty('user')
+}
+
+stillwatereclipse {
+    contextPath = archivesBaseName
+    deployName = description
+}
+
+// In this section you declare where to find the dependencies of your project
+repositories {
+    if(InetAddress.localHost.hostName.toUpperCase().contains("OMBUILDSVR")){
+        //jenkins does not like mavenLocal, but it works well for local development
+        println "HOSTNAME=" + InetAddress.localHost.hostName + ", PROJECT=" + archivesBaseName + ", skipping maven local repo"
+    }else{
+        println "HOSTNAME=" + InetAddress.localHost.hostName + ", PROJECT=" + archivesBaseName + ", using maven local repo"
+        mavenLocal() 
+    }
+    maven { url project.ext.nexusUrl + '/central' }
+    maven { url project.ext.nexusUrl + '/stillwater-release' }
+    maven { url project.ext.nexusUrl + '/stillwater-snapshots' }
+    
+}
+
+//dont wait 24 hours to fetch the latest "changing" and "dynamic" jars
+configurations {
+    jaxb    //needed for jaxb bean generation
+    cxf //needed for wsdl bean generation
+    jaxws   //needed for wsdl bean generation
+    all{
+        resolutionStrategy{
+            cacheChangingModulesFor 0, 'seconds'
+            cacheDynamicVersionsFor 0, 'seconds'
+        }
+    }
+}
+
+//needed for wsdl bean generation
+ext {
+    // CXF version.
+    cxfVersion = '2.6.2'
+
+    // Artifacts for CXF dependency.
+    cxfArtifacts = [
+        'cxf-tools-wsdlto-frontend-jaxws', 
+        'cxf-tools-wsdlto-databinding-jaxb', 
+        'cxf-tools-common', 
+        'cxf-tools-wsdlto-core'
+    ]
+}
+
+// In this section you declare the dependencies for your production and test code
+dependencies {
+    compile 'com.itextpdf:itextpdf:5.3.2'
+    compile 'org.bouncycastle:bcmail-jdk15on:1.47'
+    
+    def SPRING_VER = '4.0.6.RELEASE'
+    compile "org.springframework:spring-webmvc:$SPRING_VER"
+    //compile "org.springframework:spring-jdbc:$SPRING_VER"
+    compile "org.springframework:spring-context-support:$SPRING_VER"
+    
+    compile "javax.servlet:jstl:1.2"
+    compile "jstl:jstl:1.2"
+    
+    compile 'joda-time:joda-time:2.3'
+    
+    providedCompile "javax.servlet:servlet-api:2.5"
+    
+    compile "javax.mail:mail:1.4"
+    compile 'javax.mail:mailapi:1.4.3'
+}

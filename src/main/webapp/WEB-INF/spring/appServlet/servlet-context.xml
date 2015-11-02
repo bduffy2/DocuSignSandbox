@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd
+		http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cach-3.2e.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	
+	<jee:jndi-lookup id="defaultEnv" jndi-name="applicationDefaultEnv" default-value="qua" 
+		resource-ref="true" expected-type="java.lang.String" />
+	
+	<beans:bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+		<beans:property name="locations">
+			<beans:list>
+				<beans:value>classpath:properties/all/docu-sign.properties</beans:value>
+				<beans:value>classpath:properties/#{@systemProperties['os.name'].indexOf('Windows') >= 0 ? 'local' : defaultEnv}/docu-sign.properties</beans:value>
+			</beans:list>
+		</beans:property>
+	</beans:bean>	
+
+	<!-- turn on declarative caching 
+    <cache:annotation-driven />-->
+    
+    <mvc:annotation-driven />
+    	
+    <context:component-scan base-package="com.stillwaterinsurance.**" scoped-proxy="targetClass"/>
+    	
+    <!-- Enable aspect annotations -->
+<!--     <aop:aspectj-autoproxy/> -->
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<beans:bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/jsp/pages/" />
+		<beans:property name="suffix" value=".jsp" />
+		<!-- required to make session scoped beans available in JSPs -->
+		<beans:property name="exposeContextBeansAsAttributes" value="true" />
+	</beans:bean>
+	
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources/ directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+	<resources mapping="/pdfs/**" location="/pdfs/" />
+		
+
+</beans:beans>
