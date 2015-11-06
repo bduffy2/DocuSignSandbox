@@ -44,6 +44,7 @@ public class DocumentsController {
 		} catch(IOException e) {
 			LOGGER.error("An I/O exception occurred while sending PDF request", e);
 			status = HttpStatus.INTERNAL_SERVER_ERROR;
+			response = e.getMessage();
 		}
 		
 		return new ResponseEntity<String>(response, status);

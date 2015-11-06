@@ -40,6 +40,10 @@
 					.replace(/\n/g, '<br>');
 				$('#responseOutput').html('<pre>' + response + '</pre>');
 				$('#responseOutput').show();
+			}).fail(function(response){
+				console.log(response);
+				$('#responseOutput').html('An error occurred. <br><br>' + JSON.stringify(response, null, '\t'));
+				$('#responseOutput').show();
 			});
 		}
 	};
