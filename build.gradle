@@ -28,6 +28,7 @@ apply plugin: 'java'
 apply plugin: 'war'
 apply plugin: 'maven'
 apply plugin: 'eclipse'
+apply plugin: 'cargo'
 apply plugin: 'stillwatereclipse' //stillwater plugin
 
 defaultTasks 'tasks'
@@ -126,4 +127,25 @@ dependencies {
         exclude group:"com.sun.jdmk", module:"jmxtools"
         exclude group:"com.sun.jmx", module:"jmxri"
    }
+    
+    def cargoVersion = '1.4.5'
+    cargo "org.codehaus.cargo:cargo-core-uberjar:$cargoVersion",
+          "org.codehaus.cargo:cargo-ant:$cargoVersion"
+}
+
+cargo {
+    //containerId = 'tomcat6x'
+	containerId = 'tomcat7x'
+
+    deployable {
+        context = archivesBaseName
+    }
+
+    remote {
+        //hostname = 'omappint'
+    	hostname = 'apptst01-swi'
+        port	 = 8080
+        username = 'deploy'
+        password = 'qWxti9'
+    }
 }

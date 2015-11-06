@@ -88,7 +88,11 @@ public class DocuSignService {
 		response = getResponseBody(conn);
 		baseURL = parseXMLBody(response, "baseUrl");
 		parseXMLBody(response, "accountId");
-		result.append("-- Login response --\n\n" + prettyFormat(response, 2) + "\n");
+		try{
+			result.append("-- Login response --\n\n" + prettyFormat(response, 2) + "\n");
+		} catch(Exception e) {
+			result.append("-- Login response --\n\n" + response + "\n");
+		}
 
 		// ============================================================================
 		// STEP 2 - Signature Request on Document API Call
@@ -151,7 +155,11 @@ public class DocuSignService {
 		// display the response body
 		response = getResponseBody(conn);
 		envelopeId = parseXMLBody(response, "envelopeId");
-		result.append("-- Signature Request response --\n\n" + prettyFormat(response, 2));
+		try{
+			result.append("-- Signature Request response --\n\n" + prettyFormat(response, 2));
+		} catch(Exception e) {
+			result.append("-- Signature Request response --\n\n" + response);
+		}
 		result.append(
 				"Signature request has been sent to " + email + "!\nEnvelopeId is:  " + envelopeId + "\n");
 		
