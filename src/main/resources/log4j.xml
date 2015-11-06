@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+    <appender name="STDOUT" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} [%-5p] (%C.java:%L) - %m%n"/>
+        </layout>
+    </appender>
+
+  <appender name="mainFile" class="org.apache.log4j.RollingFileAppender">
+    <param name="File" value="/syslogs/tomcat/commercial-main.log"/>
+    <param name="MaxFileSize" value="1MB"/>
+    <param name="MaxBackupIndex" value="5"/>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} [%-5p] (%C.java:%L) - %m%n"/>
+    </layout>
+  </appender>
+  <appender name="JPA" class="org.apache.log4j.RollingFileAppender">
+    <param name="File" value="/syslogs/tomcat/commercial-hibernate.log"/>
+    <param name="MaxFileSize" value="1MB"/>
+    <param name="MaxBackupIndex" value="5"/>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} [%-5p] (%C.java:%L) - %m%n"/>
+    </layout>
+  </appender>
+  <appender name="miscFile" class="org.apache.log4j.RollingFileAppender">
+    <param name="File" value="/syslogs/tomcat/commercial-misc.log"/>
+    <param name="MaxFileSize" value="1MB"/>
+    <param name="MaxBackupIndex" value="5"/>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} [%-5p] (%C.java:%L) - %m%n"/>
+    </layout>
+  </appender>   
+
+	<logger name="com.stillwaterinsurance" additivity="false">
+        <level value="debug" />
+        <!-- 
+        	This should only be used locally. 
+        	Comment out STDOUT prior to committing changes 
+        -->
+<!--         <appender-ref ref="STDOUT" /> -->
+        <appender-ref ref="mainFile" />
+    </logger>
+    <logger name="org.springframework.orm.jpa" additivity="false">
+        <level value="ALL" />
+        <appender-ref ref="JPA" />
+    </logger>
+    <logger name="org.springframework.orm.jpa.vendor" additivity="false">
+        <level value="ALL" />
+        <appender-ref ref="JPA" />
+    </logger>
+    <logger name="org.springframework.transaction" additivity="false">
+        <level value="ALL" />
+        <appender-ref ref="JPA" />
+    </logger>
+    <logger name="org.springframework" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="miscFile" />
+    </logger>
+    
+    <logger name="org.hibernate" additivity="false">
+        <level value="ALL" />
+        <appender-ref ref="JPA" />
+    </logger>
+    <logger name="org.hibernate.SQL" additivity="false">
+        <level value="DEBUG" />
+        <appender-ref ref="JPA" />
+    </logger>
+    <logger name="org.hibernate.type" additivity="false">
+        <level value="ALL" />
+        <appender-ref ref="JPA" />
+    </logger>
+	<logger name="org.hibernate.type.descriptor.sql.BasicBinder"> 
+	    <level value="DEBUG"/>
+	    <appender-ref ref="JPA"/>
+	</logger>
+	
+	<logger name="org.hibernate.event.def.DefaultLoadEventListener" additivity="true">
+	    <level value="ALL"/>
+	    <appender-ref ref="JPA"/>
+	</logger>
+	
+	<logger name="org.hibernate.cache.ReadWriteCache" additivity="true">
+	   <level value="ALL"/>
+	   <appender-ref ref="JPA"/>
+	</logger>
+    <root>
+        <priority value="warn" />
+        <appender-ref ref="miscFile" />
+    </root>
+</log4j:configuration>
