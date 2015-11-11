@@ -11,7 +11,7 @@
 		
 	});
 	
-	_DS.sendFiles = function() {
+	_DS.sendDoc = function() {
 		$('#responseOutput').hide();
 		
 		var email = $('#sendToEmail').val();
@@ -47,7 +47,32 @@
 			});
 		}
 	};
-	
+
+	_DS.sendTemplate = function() {
+		$('#responseOutput').hide();
+		
+		if(validateEmail($('#ohqInsuredEmail').val())) {
+			$.ajax({
+				type: 'POST',
+				url: _CONTEXT + "/docs/send/template",
+				data: $('#ohqForm').serialize(),
+				beforeSend: _DS.showLoadingModal,
+				complete: _DS.hideLoadingModal
+			}).done(function(response){
+				response = response.replace(/&/g, '&amp;')
+					.replace(/>/g, '&gt;')
+					.replace(/</g, '&lt;')
+					.replace(/\n/g, '<br>');
+				$('#responseOutput').html('<pre>' + response + '</pre>');
+				$('#responseOutput').show();
+			}).fail(function(response){
+				console.log(response);
+				$('#responseOutput').html('An error occurred. <br><br>' + JSON.stringify(response, null, '\t'));
+				$('#responseOutput').show();
+			});
+		}
+	};
+
 
 	function validateEmail(email) {
 		if (email !== '' && /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {

@@ -30,7 +30,53 @@
 		
 		<hr/>
 		
-		<h5>Send To</h5>
+		<h3>Template</h3>
+		<h5>Older Home Questionnaire</h5>
+		<form class="userInputForm" id="ohqForm">
+			<div class="row collapse">
+				<div class="one columns">
+					<label class="inline">Insured Name</label>
+				</div>
+				<div class="four columns end">
+					<input type="text" id="ohqInsuredName" name="name[]" placeholder="optional" />
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="one columns">
+					<label class="inline">Insured Email</label>
+				</div>
+				<div class="four columns end">
+					<input type="text" id="ohqInsuredEmail" name="email[]" />
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="one columns">
+					<label class="inline">Producer Name</label>
+				</div>
+				<div class="four columns end">
+					<input type="text" id="ohqProducerName" name="name[]" placeholder="optional" />
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="one columns">
+					<label class="inline">Producer Email</label>
+				</div>
+				<div class="four columns end">
+					<input type="text" id="ohqProducerEmail" name="email[]" placeholder="optional" />
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="eleven offset-by-one columns">
+					<input type="button" class="button" value="Send" onclick="DsGlobal.sendTemplate()" />
+				</div>
+			</div>
+			
+			<input type="hidden" name="templateId" value="AC626C30-21BF-4BF7-9774-46B5EEEEF93D" />
+		</form>
+		
+		<hr/>
+		
+		<h3>Document</h3>
 		<div class="userInputForm">
 			<div class="row collapse">
 				<div class="one columns">
@@ -50,7 +96,7 @@
 			</div>
 			<div class="row collapse">
 				<div class="eleven offset-by-one columns">
-					<input type="button" class="button" value="Send" onclick="DsGlobal.sendFiles()" />
+					<input type="button" class="button" value="Send" onclick="DsGlobal.sendDoc()" />
 					<a href="${context}/resources/pdfs/Hello World.pdf" target="_blank">This document</a> will be sent for signature
 				</div>
 			</div>

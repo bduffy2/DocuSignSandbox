@@ -15,10 +15,5 @@ public class IndexController {
 	public String index(final ModelAndView mav, final HttpSession session) {
 		return "/index";
 	}
-
-	@RequestMapping(value={"/fileupload"}, method=RequestMethod.GET)
-	public String fileUpload(final ModelAndView mav, final HttpSession session) {
-		return "/fileupload";
-	}
 	
 }
