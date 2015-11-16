@@ -2,6 +2,9 @@ package com.stillwaterinsurance.docusign.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import javax.servlet.http.HttpSession;
 
@@ -53,19 +56,28 @@ public class DocumentsController {
 	@RequestMapping(value={"/send/template"}, method=RequestMethod.POST)
 	public ResponseEntity<String> sendTemplate(final ModelAndView mav, final HttpSession session,
 			@RequestParam(value="templateId") final String templateId,
-			@RequestParam(value="role[]", required=false) String[] roles,
-			@RequestParam(value="name[]") final String[] names,
-			@RequestParam(value="email[]") final String[] emails) {
+			@RequestParam(value="insEmail") final String insEmail,
+			@RequestParam(value="agtEmail", required=false) final String agtEmail) {
 		
 		HttpStatus status = HttpStatus.OK;
-		String response = "";
+		String response;
+		
+		List<String> roles = new ArrayList<String>();
+		List<String> names = new ArrayList<String>();
+		List<String> emails = new ArrayList<String>();
+		
+		roles.add("Insured");
+		names.add(randomName());
+		emails.add(insEmail);
+		
+		if(agtEmail != null) {
+			roles.add("Producer");
+			names.add(randomName());
+			emails.add(agtEmail);
+		}
 		
 		try {
-			//TODO - send to all people not just [0]
-			if(roles == null || roles.length == 0) {
-				roles = new String[]{"Insured"};
-			}
-			response = signatureService.requestSignatureTemplate(templateId, roles[0], names[0], emails[0]);
+			response = signatureService.requestSignatureTemplate(templateId, roles, names, emails);
 			response.replaceAll("\n", "<br>");
 		} catch(IOException e) {
 			LOGGER.error("An I/O exception occurred while sending PDF request", e);
@@ -74,6 +86,15 @@ public class DocumentsController {
 		}
 		
 		return new ResponseEntity<String>(response, status);
+	}
+	
+	private String randomName() {
+		final String[] FIRST_NAMES = new String[]{"John", "James", "Robert", "Mary", "Lisa"};
+		final String[] LAST_NAMES = new String[]{"Smith", "Jones", "Williams", "Taylor", "Brown"};
+		Random random = new Random();
+		
+		return FIRST_NAMES[random.nextInt(FIRST_NAMES.length)] + 
+				" " + LAST_NAMES[random.nextInt(LAST_NAMES.length)];
 	}
 	
 }

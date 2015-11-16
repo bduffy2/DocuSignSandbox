@@ -11,6 +11,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
@@ -198,8 +199,8 @@ public class DocuSignService {
 	 * @param recipientEmail recipient (signer) email	
 	 * @throws IOException
 	 */
-	public String requestSignatureTemplate(String templateId, String roleName, 
-			String recipientName, String recipientEmail) throws IOException {
+	public String requestSignatureTemplate(String templateId, List<String> roles, 
+			List<String> names, List<String> emails) throws IOException {
 
 		StringBuilder result = new StringBuilder();
 		
@@ -260,11 +261,18 @@ public class DocuSignService {
 					"<templateId>" + templateId + "</templateId>" + 
 					"<templateRoles>" + 
 						"<templateRole>" + 	
-							"<name>" + recipientName + "</name>" +
-							"<email>" + recipientEmail + "</email>" +
-							"<roleName>" + roleName + "</roleName>" + 
-						"</templateRole>" + 
-					"</templateRoles>" + 
+							"<name>" + names.get(0) + "</name>" +
+							"<email>" + emails.get(0) + "</email>" +
+							"<roleName>" + roles.get(0) + "</roleName>" + 
+						"</templateRole>";
+		if(names.size() > 1 && emails.size() > 1 && roles.size() > 1) {
+			body += 	"<templateRole>" + 	
+							"<name>" + names.get(1) + "</name>" +
+							"<email>" + emails.get(1) + "</email>" +
+							"<roleName>" + roles.get(1) + "</roleName>" + 
+						"</templateRole>";
+		}
+		body += 	"</templateRoles>" + 
 				"</envelopeDefinition>";
 		
 		conn = (HttpURLConnection) new URL(url).openConnection();
@@ -290,7 +298,7 @@ public class DocuSignService {
 		response = getResponseBody(conn);
 		envelopeId = parseXMLBody(response, "envelopeId");
 		result.append("-- Signature Request response --\n\n" + prettyFormat(response, 2));
-		result.append("Signature request has been sent to " + recipientEmail  + "!\nEnvelopeId is:  " + envelopeId  + "\n");
+		result.append("Signature request has been sent to " + emails  + "!\nEnvelopeId is:  " + envelopeId  + "\n");
 		
 		return result.toString();
 	}

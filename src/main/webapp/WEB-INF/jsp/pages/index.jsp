@@ -35,26 +35,10 @@
 		<form class="userInputForm" id="ohqForm">
 			<div class="row collapse">
 				<div class="one columns">
-					<label class="inline">Insured Name</label>
-				</div>
-				<div class="four columns end">
-					<input type="text" id="ohqInsuredName" name="name[]" placeholder="optional" />
-				</div>
-			</div>
-			<div class="row collapse">
-				<div class="one columns">
 					<label class="inline">Insured Email</label>
 				</div>
 				<div class="four columns end">
-					<input type="text" id="ohqInsuredEmail" name="email[]" />
-				</div>
-			</div>
-			<div class="row collapse">
-				<div class="one columns">
-					<label class="inline">Producer Name</label>
-				</div>
-				<div class="four columns end">
-					<input type="text" id="ohqProducerName" name="name[]" placeholder="optional" />
+					<input type="text" id="ohqInsuredEmail" name="insEmail" />
 				</div>
 			</div>
 			<div class="row collapse">
@@ -62,7 +46,7 @@
 					<label class="inline">Producer Email</label>
 				</div>
 				<div class="four columns end">
-					<input type="text" id="ohqProducerEmail" name="email[]" placeholder="optional" />
+					<input type="text" id="ohqProducerEmail" name="agtEmail" placeholder="optional" />
 				</div>
 			</div>
 			<div class="row collapse">
