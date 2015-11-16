@@ -109,7 +109,6 @@ dependencies {
     
     def SPRING_VER = '4.0.6.RELEASE'
     compile "org.springframework:spring-webmvc:$SPRING_VER"
-    //compile "org.springframework:spring-jdbc:$SPRING_VER"
     compile "org.springframework:spring-context-support:$SPRING_VER"
     
     compile "javax.servlet:jstl:1.2"
@@ -134,7 +133,6 @@ dependencies {
 }
 
 cargo {
-    //containerId = 'tomcat6x'
 	containerId = 'tomcat7x'
 
     deployable {
@@ -142,10 +140,9 @@ cargo {
     }
 
     remote {
-        //hostname = 'omappint'
     	hostname = 'apptst01-swi'
         port	 = 8080
         username = 'deploy'
-        password = 'qWxti9'
+        password = '8a3YJ7'
     }
 }
