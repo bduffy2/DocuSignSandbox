@@ -13,6 +13,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -215,7 +218,6 @@ public class DocuSignService {
 		// additional variable declarations
 		String baseURL = ""; // we will retrieve this through the Login API call
 		String accountId = ""; // we will retrieve this through the Login API call
-		String envelopeId = ""; // generated from signature request API call
 		String url = ""; // end-point for each api call
 		String body = ""; // request body
 		String response = ""; // response body
@@ -237,7 +239,114 @@ public class DocuSignService {
 		status = conn.getResponseCode();
 		if( status != 200 )	// 200 = OK
 		{
-			errorParse(conn, status);
+			result.append(errorParse(conn, status));
+			return result.toString();
+		}
+		
+		// obtain baseUrl and accountId values from response body 
+		response = getResponseBody(conn);
+		baseURL = parseXMLBody(response, "baseUrl");
+		accountId = parseXMLBody(response, "accountId");
+		result.append("-- Login response --\n\n" + prettyFormat(response, 2) + "\n");
+		
+		//============================================================================
+		// STEP 2 - Signature Request from Template API Call
+		//============================================================================
+		
+		url = baseURL + "/envelopes";	// append "/envelopes" to baseUrl for signature request call
+
+		final JsonObjectBuilder roleInsured = Json.createObjectBuilder()
+				.add("name", names.get(0))
+				.add("email", emails.get(0))
+				.add("roleName", roles.get(0));
+		final JsonArrayBuilder templateRoles = Json.createArrayBuilder().add(roleInsured);
+		if(names.size() > 1 && emails.size() > 1 && roles.size() > 1) {
+			final JsonObjectBuilder roleAgent = Json.createObjectBuilder()
+					.add("name", names.get(1))
+					.add("email", emails.get(1))
+					.add("roleName", roles.get(1));
+			templateRoles.add(roleAgent);
+		}
+		
+		body = Json.createObjectBuilder().add("accountId", accountId)
+				.add("emailSubject", "DocuSign API Call - Signature request from template")
+				.add("templateId", templateId)
+				.add("status", "sent")
+				.add("templateRoles", templateRoles)
+				.build().toString();
+		
+		conn = (HttpURLConnection) new URL(url).openConnection();
+		conn.setRequestMethod("POST");
+		conn.setRequestProperty("X-DocuSign-Authentication", authenticationHeader);
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("Accept", "application/json");
+		conn.setRequestProperty("Content-Length", Integer.toString(body.length()));
+		conn.setDoOutput(true);
+		// write body of the POST request 
+		DataOutputStream dos = new DataOutputStream( conn.getOutputStream() );
+		dos.writeBytes(body); dos.flush(); dos.close();
+		
+		result.append("STEP 2:  Sending signature request from template...\n");
+		status = conn.getResponseCode(); // triggers the request
+		if( status != 201 )	// 201 = Created
+		{
+			result.append(errorParse(conn, status));
+			return result.toString();
+		}
+		
+		result.append("-- Signature Request response --\n\n" + getResponseBody(conn));
+		
+		return result.toString();
+	}
+	
+	/**
+	 * Send a document for signature via template
+	 * 
+	 * @param document the base document
+	 * @param templateId The overlay template
+	 * @param roleName valid template role name
+	 * @param recipientName recipient (signer) name
+	 * @param recipientEmail recipient (signer) email	
+	 * @throws IOException
+	 */
+	public String requestSignatureCompositeTemplate(String document, String templateId, List<String> roles, 
+			List<String> names, List<String> emails) throws IOException {
+
+		StringBuilder result = new StringBuilder();
+		
+		// first we construct the DocuSign authentication header (can be XML or JSON format)
+		String authenticationHeader = 
+					"<DocuSignCredentials>" + 
+						"<Username>" + username + "</Username>" +
+						"<Password>" + password + "</Password>" + 
+						"<IntegratorKey>" + integratorKey + "</IntegratorKey>" + 
+					"</DocuSignCredentials>";
+		
+		// additional variable declarations
+		String baseURL = ""; // we will retrieve this through the Login API call
+		String accountId = ""; // we will retrieve this through the Login API call
+		String url = ""; // end-point for each api call
+		String body = ""; // request body
+		String response = ""; // response body
+		int status; // response status
+		HttpURLConnection conn = null;	// connection object used for each request
+		
+		//============================================================================
+		// STEP 1 - Make the Login API call to retrieve your baseUrl and accountId
+		//============================================================================
+		
+		url = "https://demo.docusign.net/restapi/v2/login_information";
+		body = "";	// no request body for the login call
+		
+		// create connection object, set request method, add request headers
+		conn = initializeRequest(url, "GET", body, authenticationHeader);
+		
+		// send the request
+		result.append("STEP 1:  Sending Login request...\n");
+		status = conn.getResponseCode();
+		if( status != 200 )	// 200 = OK
+		{
+			result.append(errorParse(conn, status));
 			return result.toString();
 		}
 		
@@ -253,52 +362,59 @@ public class DocuSignService {
 		
 		url = baseURL + "/envelopes";	// append "/envelopes" to baseUrl for signature request call
 		
-		// this example uses XML formatted requests, JSON format is also accepted
-		body = "<envelopeDefinition xmlns=\"http://www.docusign.com/restapi\">" +
-					"<accountId>" + accountId + "</accountId>" +
-					"<status>sent</status>" + 	// "sent" to send envelope, "created" to save as draft envelope
-					"<emailSubject>DocuSign API Call - Signature request from template</emailSubject>" +
-					"<templateId>" + templateId + "</templateId>" + 
-					"<templateRoles>" + 
-						"<templateRole>" + 	
-							"<name>" + names.get(0) + "</name>" +
-							"<email>" + emails.get(0) + "</email>" +
-							"<roleName>" + roles.get(0) + "</roleName>" + 
-						"</templateRole>";
-		if(names.size() > 1 && emails.size() > 1 && roles.size() > 1) {
-			body += 	"<templateRole>" + 	
-							"<name>" + names.get(1) + "</name>" +
-							"<email>" + emails.get(1) + "</email>" +
-							"<roleName>" + roles.get(1) + "</roleName>" + 
-						"</templateRole>";
-		}
-		body += 	"</templateRoles>" + 
-				"</envelopeDefinition>";
+		final JsonArrayBuilder compositeTemplates = Json.createArrayBuilder()
+				.add(Json.createObjectBuilder()
+						.add("serverTemplates",
+								Json.createArrayBuilder().add(Json.createObjectBuilder()
+										.add("sequence", "1")
+										.add("templateId", templateId)))
+						.add("inlineTemplates",
+								Json.createArrayBuilder().add(Json.createObjectBuilder()
+										.add("sequence", "1")
+										.add("recipients", Json.createObjectBuilder().add("signers",
+												Json.createArrayBuilder().add(Json.createObjectBuilder()
+														.add("email", emails.get(0))
+														.add("name", names.get(0))
+														.add("recipientId", "1")
+														.add("roleName", roles.get(0))))))));
+		
+		body = Json.createObjectBuilder().add("accountId", accountId)
+				.add("emailSubject", "Hi Mom!")
+				.add("status", "sent")
+				.add("compositeTemplates", compositeTemplates)
+				.build().toString();
 		
 		conn = (HttpURLConnection) new URL(url).openConnection();
 		conn.setRequestMethod("POST");
 		conn.setRequestProperty("X-DocuSign-Authentication", authenticationHeader);
-		conn.setRequestProperty("Content-Type", "application/xml");
-		conn.setRequestProperty("Accept", "application/xml");
-		conn.setRequestProperty("Content-Length", Integer.toString(body.length()));
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("Accept", "application/json");
+		conn.setRequestProperty("Content-Disposition", "form-data");
 		conn.setDoOutput(true);
+		
 		// write body of the POST request 
 		DataOutputStream dos = new DataOutputStream( conn.getOutputStream() );
-		dos.writeBytes(body); dos.flush(); dos.close();
+		dos.writeBytes(body);
+		dos.flush();
+		dos.close();
+		
+		//TODO - send document along with template (overlay) - see document send (#requestSignatureDocument)
+//		DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
+//		dos.writeBytes(requestBody.toString());
+//		dos.write(bytes);
+//		dos.writeBytes(reqBody2.toString());
+//		dos.flush();
+//		dos.close();
 		
 		result.append("STEP 2:  Sending signature request from template...\n");
 		status = conn.getResponseCode(); // triggers the request
 		if( status != 201 )	// 201 = Created
 		{
-			errorParse(conn, status);
+			result.append(errorParse(conn, status));
 			return result.toString();
 		}
-		
-		// obtain envelopeId value from response body 
-		response = getResponseBody(conn);
-		envelopeId = parseXMLBody(response, "envelopeId");
-		result.append("-- Signature Request response --\n\n" + prettyFormat(response, 2));
-		result.append("Signature request has been sent to " + emails  + "!\nEnvelopeId is:  " + envelopeId  + "\n");
+		 
+		result.append("-- Signature Request response --\n\n" + getResponseBody(conn));
 		
 		return result.toString();
 	}

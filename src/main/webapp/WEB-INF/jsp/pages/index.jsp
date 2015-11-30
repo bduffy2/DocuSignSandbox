@@ -88,13 +88,37 @@
 		
 		<hr/>
 		
-		TODO:
-		<ul>
-			<li>Send multiple docs in single "envelope"</li>
-			<li>Upload custom docs?</li>
-			<li>Real docs that we will be sending from FIRST</li>
-			<li>Templates</li>
-		</ul>
+		<h3>Composite Template</h3>
+		<form class="userInputForm" id="compTemplateForm">
+			<div class="row collapse">
+				<div class="one columns">
+					<label class="inline">Insured Email</label>
+				</div>
+				<div class="four columns end">
+					<input type="text" id="compTemplateInsuredEmail" name="insEmail" />
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="one columns">
+					<label class="inline">Producer Email</label>
+				</div>
+				<div class="four columns end">
+					<input type="text" id="compTemplateProducerEmail" name="agtEmail" placeholder="optional" />
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="eleven offset-by-one columns">
+					<input type="button" class="button" value="Send" onclick="DsGlobal.sendCompositeTemplate()" />
+				</div>
+			</div>
+			
+			<input type="hidden" name="templateId" value="AC626C30-21BF-4BF7-9774-46B5EEEEF93D" />
+			<input type="hidden" name="document" value="/resources/pdfs/Hello World.pdf" />
+		</form>
+		
+		<hr/>
+		<h3>TODO</h3>
+		<h6>Composite template overlay on document</h6>
 		
 		<div class="panel display-none" id="responseOutput"></div>
 		

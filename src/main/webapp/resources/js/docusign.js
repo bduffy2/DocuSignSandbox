@@ -52,26 +52,38 @@
 		$('#responseOutput').hide();
 		
 		if(validateEmail($('#ohqInsuredEmail').val())) {
-			$.ajax({
-				type: 'POST',
-				url: _CONTEXT + "/docs/send/template",
-				data: $('#ohqForm').serialize(),
-				beforeSend: _DS.showLoadingModal,
-				complete: _DS.hideLoadingModal
-			}).done(function(response){
-				response = response.replace(/&/g, '&amp;')
-					.replace(/>/g, '&gt;')
-					.replace(/</g, '&lt;')
-					.replace(/\n/g, '<br>');
-				$('#responseOutput').html('<pre>' + response + '</pre>');
-				$('#responseOutput').show();
-			}).fail(function(response){
-				console.log(response);
-				$('#responseOutput').html('An error occurred. <br><br>' + JSON.stringify(response, null, '\t'));
-				$('#responseOutput').show();
-			});
+			ajaxSendTemplate("/docs/send/template", $('#ohqForm').serialize());
 		}
 	};
+	
+	_DS.sendCompositeTemplate = function() {
+		$('#responseOutput').hide();
+		
+		if(validateEmail($('#compTemplateInsuredEmail').val())) {
+			ajaxSendTemplate("/docs/send/compositeTemplate", $('#compTemplateForm').serialize());
+		}
+	};
+	
+	function ajaxSendTemplate(url, data) {
+		$.ajax({
+			type: 'POST',
+			url: _CONTEXT + url,
+			data: data,
+			beforeSend: _DS.showLoadingModal,
+			complete: _DS.hideLoadingModal
+		}).done(function(response){
+			response = response.replace(/&/g, '&amp;')
+				.replace(/>/g, '&gt;')
+				.replace(/</g, '&lt;')
+				.replace(/\n/g, '<br>');
+			$('#responseOutput').html('<pre>' + response + '</pre>');
+			$('#responseOutput').show();
+		}).fail(function(response){
+			console.log(response);
+			$('#responseOutput').html('An error occurred. <br><br>' + JSON.stringify(response, null, '\t'));
+			$('#responseOutput').show();
+		});
+	}
 
 
 	function validateEmail(email) {

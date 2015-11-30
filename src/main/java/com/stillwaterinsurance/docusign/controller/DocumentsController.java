@@ -70,7 +70,7 @@ public class DocumentsController {
 		names.add(randomName());
 		emails.add(insEmail);
 		
-		if(agtEmail != null) {
+		if(agtEmail != null && !agtEmail.trim().isEmpty()) {
 			roles.add("Producer");
 			names.add(randomName());
 			emails.add(agtEmail);
@@ -78,6 +78,42 @@ public class DocumentsController {
 		
 		try {
 			response = signatureService.requestSignatureTemplate(templateId, roles, names, emails);
+			response.replaceAll("\n", "<br>");
+		} catch(IOException e) {
+			LOGGER.error("An I/O exception occurred while sending PDF request", e);
+			status = HttpStatus.INTERNAL_SERVER_ERROR;
+			response = e.getMessage();
+		}
+		
+		return new ResponseEntity<String>(response, status);
+	}
+	
+	@RequestMapping(value={"/send/compositeTemplate"}, method=RequestMethod.POST)
+	public ResponseEntity<String> sendCompTemplate(final ModelAndView mav, final HttpSession session,
+			@RequestParam(value="templateId") final String templateId,
+			@RequestParam(value="document") final String document,
+			@RequestParam(value="insEmail") final String insEmail,
+			@RequestParam(value="agtEmail", required=false) final String agtEmail) {
+		
+		HttpStatus status = HttpStatus.OK;
+		String response;
+		
+		List<String> roles = new ArrayList<String>();
+		List<String> names = new ArrayList<String>();
+		List<String> emails = new ArrayList<String>();
+		
+		roles.add("Insured");
+		names.add(randomName());
+		emails.add(insEmail);
+		
+		if(agtEmail != null && !agtEmail.trim().isEmpty()) {
+			roles.add("Producer");
+			names.add(randomName());
+			emails.add(agtEmail);
+		}
+		
+		try {
+			response = signatureService.requestSignatureCompositeTemplate(document, templateId, roles, names, emails);
 			response.replaceAll("\n", "<br>");
 		} catch(IOException e) {
 			LOGGER.error("An I/O exception occurred while sending PDF request", e);
