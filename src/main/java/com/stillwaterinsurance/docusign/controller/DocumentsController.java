@@ -29,17 +29,21 @@ public class DocumentsController {
 	@Autowired
 	private DocuSignService signatureService;
 	
-	@RequestMapping(value={"/send"}, method=RequestMethod.POST)
+	@RequestMapping(value={"/sendDocument"}, method=RequestMethod.POST)
 	public ResponseEntity<String> sendDoc(final ModelAndView mav, final HttpSession session,
 			@RequestParam(value="document") final String document,
-			@RequestParam(value="name") final String name,
-			@RequestParam(value="email") final String email) {
+			@RequestParam(value="email") final String email,
+			@RequestParam(value="name", required=false) String name) {
 		
 		HttpStatus status = HttpStatus.OK;
 		String response = "";
 		
 		final String s = session.getServletContext().getRealPath("/");
 		final File file = new File(s + document);
+		
+		if(name == null || name.trim().isEmpty()) {
+			name = randomName();
+		}
 		
 		try {
 			response = signatureService.requestSignatureDocument(file, name, email);
@@ -53,7 +57,7 @@ public class DocumentsController {
 		return new ResponseEntity<String>(response, status);
 	}
 	
-	@RequestMapping(value={"/send/template"}, method=RequestMethod.POST)
+	@RequestMapping(value={"/sendTemplate"}, method=RequestMethod.POST)
 	public ResponseEntity<String> sendTemplate(final ModelAndView mav, final HttpSession session,
 			@RequestParam(value="templateId") final String templateId,
 			@RequestParam(value="insEmail") final String insEmail,
@@ -88,7 +92,7 @@ public class DocumentsController {
 		return new ResponseEntity<String>(response, status);
 	}
 	
-	@RequestMapping(value={"/send/compositeTemplate"}, method=RequestMethod.POST)
+	@RequestMapping(value={"/sendCompositeTemplate"}, method=RequestMethod.POST)
 	public ResponseEntity<String> sendCompTemplate(final ModelAndView mav, final HttpSession session,
 			@RequestParam(value="templateId") final String templateId,
 			@RequestParam(value="document") final String document,
@@ -112,8 +116,11 @@ public class DocumentsController {
 			emails.add(agtEmail);
 		}
 		
+		final String s = session.getServletContext().getRealPath("/");
+		final File file = new File(s + document);
+		
 		try {
-			response = signatureService.requestSignatureCompositeTemplate(document, templateId, roles, names, emails);
+			response = signatureService.requestSignatureCompositeTemplate(file, templateId, roles, names, emails);
 			response.replaceAll("\n", "<br>");
 		} catch(IOException e) {
 			LOGGER.error("An I/O exception occurred while sending PDF request", e);

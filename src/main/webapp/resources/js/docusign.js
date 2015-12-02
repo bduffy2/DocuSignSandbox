@@ -17,15 +17,10 @@
 		var email = $('#sendToEmail').val();
 		var name = $('#sendToName').val();
 		
-		if(name === '') {
-			var names = ['John Stockton', 'Karl Malone', 'T.J. Houshmandzadeh', 'JuJu Smith-Schuster'];
-			name = names[Math.floor((Math.random() * 4))];
-		}
-		
 		if(validateEmail(email)) {
 			$.ajax({
 				type: 'POST',
-				url: _CONTEXT + "/docs/send",
+				url: _CONTEXT + "/docs/sendDocument",
 				data: {
 					document: '/resources/pdfs/Hello World.pdf',
 					name: name,
@@ -52,7 +47,7 @@
 		$('#responseOutput').hide();
 		
 		if(validateEmail($('#ohqInsuredEmail').val())) {
-			ajaxSendTemplate("/docs/send/template", $('#ohqForm').serialize());
+			ajaxSendTemplate("/docs/sendTemplate", $('#ohqForm').serialize());
 		}
 	};
 	
@@ -60,7 +55,7 @@
 		$('#responseOutput').hide();
 		
 		if(validateEmail($('#compTemplateInsuredEmail').val())) {
-			ajaxSendTemplate("/docs/send/compositeTemplate", $('#compTemplateForm').serialize());
+			ajaxSendTemplate("/docs/sendCompositeTemplate", $('#compTemplateForm').serialize());
 		}
 	};
 	

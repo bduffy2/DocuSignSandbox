@@ -302,14 +302,14 @@ public class DocuSignService {
 	/**
 	 * Send a document for signature via template
 	 * 
-	 * @param document the base document
+	 * @param pdfFile the base document
 	 * @param templateId The overlay template
 	 * @param roleName valid template role name
 	 * @param recipientName recipient (signer) name
 	 * @param recipientEmail recipient (signer) email	
 	 * @throws IOException
 	 */
-	public String requestSignatureCompositeTemplate(String document, String templateId, List<String> roles, 
+	public String requestSignatureCompositeTemplate(File pdfFile, String templateId, List<String> roles, 
 			List<String> names, List<String> emails) throws IOException {
 
 		StringBuilder result = new StringBuilder();
@@ -362,49 +362,52 @@ public class DocuSignService {
 		
 		url = baseURL + "/envelopes";	// append "/envelopes" to baseUrl for signature request call
 		
-		final JsonArrayBuilder compositeTemplates = Json.createArrayBuilder()
-				.add(Json.createObjectBuilder()
-						.add("serverTemplates",
-								Json.createArrayBuilder().add(Json.createObjectBuilder()
-										.add("sequence", "1")
-										.add("templateId", templateId)))
-						.add("inlineTemplates",
-								Json.createArrayBuilder().add(Json.createObjectBuilder()
-										.add("sequence", "1")
-										.add("recipients", Json.createObjectBuilder().add("signers",
-												Json.createArrayBuilder().add(Json.createObjectBuilder()
-														.add("email", emails.get(0))
-														.add("name", names.get(0))
-														.add("recipientId", "1")
-														.add("roleName", roles.get(0))))))));
-		
-		body = Json.createObjectBuilder().add("accountId", accountId)
-				.add("emailSubject", "Hi Mom!")
+		body = Json.createObjectBuilder()
+				.add("accountId", accountId)
+				.add("emailSubject", "Brandon - testing template overlay")
 				.add("status", "sent")
-				.add("compositeTemplates", compositeTemplates)
+				.add("compositeTemplates", Json.createArrayBuilder().add(Json.createObjectBuilder()
+						.add("serverTemplates", Json.createArrayBuilder().add(Json.createObjectBuilder()
+								.add("sequence", "1")
+								.add("templateId", templateId)))
+						.add("inlineTemplates", Json.createArrayBuilder().add(Json.createObjectBuilder()
+								.add("sequence", "1")
+								.add("recipients", Json.createObjectBuilder()
+										.add("signers", Json.createArrayBuilder().add(Json.createObjectBuilder()
+												.add("email", emails.get(0))
+												.add("name", names.get(0))
+												.add("recipientId", "1")
+												.add("roleName", roles.get(0)))))))
+						.add("document", Json.createObjectBuilder()
+								.add("documentId", "1")
+								.add("name", pdfFile.getName()))))
 				.build().toString();
 		
 		conn = (HttpURLConnection) new URL(url).openConnection();
 		conn.setRequestMethod("POST");
 		conn.setRequestProperty("X-DocuSign-Authentication", authenticationHeader);
-		conn.setRequestProperty("Content-Type", "application/json");
 		conn.setRequestProperty("Accept", "application/json");
-		conn.setRequestProperty("Content-Disposition", "form-data");
+		conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=BOUNDARY");
 		conn.setDoOutput(true);
 		
-		// write body of the POST request 
-		DataOutputStream dos = new DataOutputStream( conn.getOutputStream() );
-		dos.writeBytes(body);
+		// read document content into byte array
+		InputStream inputStream = new FileInputStream(pdfFile);
+		byte[] bytes = new byte[(int) pdfFile.length()];
+		inputStream.read(bytes);
+		inputStream.close();
+		
+		// start constructing the multipart/form-data request...
+		String requestBody = "\r\n\r\n--BOUNDARY\r\n" + "Content-Type: application/json\r\n"
+				+ "Content-Disposition: form-data\r\n" + "\r\n" + body + "\r\n\r\n--BOUNDARY\r\n" + 
+				"Content-Type: application/pdf \r\n" + "Content-Disposition: file; filename=\"" + pdfFile.getName()
+				+ "\"; documentid=1\r\n" + "\r\n";
+		
+		DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
+		dos.writeBytes(requestBody);
+		dos.write(bytes);
+		dos.writeBytes("\r\n" + "--BOUNDARY--\r\n\r\n");
 		dos.flush();
 		dos.close();
-		
-		//TODO - send document along with template (overlay) - see document send (#requestSignatureDocument)
-//		DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
-//		dos.writeBytes(requestBody.toString());
-//		dos.write(bytes);
-//		dos.writeBytes(reqBody2.toString());
-//		dos.flush();
-//		dos.close();
 		
 		result.append("STEP 2:  Sending signature request from template...\n");
 		status = conn.getResponseCode(); // triggers the request
@@ -437,7 +440,7 @@ public class DocuSignService {
 			return conn;
 
 		} catch (Exception e) {
-			//TODO - this is terribly lazy code
+			// lazy code
 			throw new RuntimeException(e);
 		}
 	}
@@ -450,7 +453,7 @@ public class DocuSignService {
 			XPath xPath = XPathFactory.newInstance().newXPath();
 			return (xPath.evaluate(xPathExpression, new InputSource(new StringReader(body))));
 		} catch (Exception e) {
-			//TODO - this is terribly lazy code
+			// lazy code
 			throw new RuntimeException(e);
 		}
 	}
@@ -467,7 +470,7 @@ public class DocuSignService {
 				body.append(line);
 			return body.toString();
 		} catch (Exception e) {
-			//TODO - this is terribly lazy code
+			// lazy code
 			throw new RuntimeException(e);
 		}
 	}
@@ -484,9 +487,9 @@ public class DocuSignService {
 			line = null;
 			while ((line = br.readLine()) != null)
 				responseError.append(line);
-			return "\nError description:  \n" + prettyFormat(responseError.toString(), 2);
+			return "\nError description:  \n" + responseError.toString();
 		} catch (Exception e) {
-			//TODO - this is terribly lazy code
+			// lazy code
 			throw new RuntimeException(e);
 		}
 	}
@@ -503,7 +506,7 @@ public class DocuSignService {
 			transformer.transform(xmlInput, xmlOutput);
 			return xmlOutput.getWriter().toString();
 		} catch (Exception e) {
-			//TODO - this is terribly lazy code
+			// lazy code
 			throw new RuntimeException(e);
 		}
 	}

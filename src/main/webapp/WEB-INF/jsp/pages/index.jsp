@@ -31,7 +31,7 @@
 		<hr/>
 		
 		<h3>Template</h3>
-		<h5>Older Home Questionnaire</h5>
+		<h6>Uses a template that is hosted by DocuSign (Older Home Questionnaire)</h6>
 		<form class="userInputForm" id="ohqForm">
 			<div class="row collapse">
 				<div class="one columns">
@@ -60,7 +60,49 @@
 		
 		<hr/>
 		
+		<h3>Composite Template (Overlay)</h3>
+		<h6>Overlay a template onto a document. The template adds the signature area to the 
+		Document via an "anchor" tag</h6>
+		<form class="userInputForm" id="compTemplateForm">
+			<div class="row collapse">
+				<div class="one columns">
+					<label class="inline">Insured Email</label>
+				</div>
+				<div class="four columns end">
+					<input type="text" id="compTemplateInsuredEmail" name="insEmail" />
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="one columns">
+					<label class="inline">Document</label>
+				</div>
+				<div class="four columns end">
+					<select name="document">
+						<option value="/resources/pdfs/Suppl_App_H3.pdf">
+							Supplemental App (UW questions) H3 California
+						</option>
+						<option value="/resources/pdfs/Suppl_App_H4.pdf">
+							Supplemental App (UW questions) H4 California
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="eleven offset-by-one columns">
+					<input type="button" class="button" value="Send" onclick="DsGlobal.sendCompositeTemplate()" />
+					<a href="${context}/resources/pdfs/Suppl_App_H3.pdf" target="_blank">H3 CA</a>&nbsp;&nbsp;
+					<a href="${context}/resources/pdfs/Suppl_App_H4.pdf" target="_blank">H4 CA</a>
+				</div>
+			</div>
+			
+			<input type="hidden" name="templateId" value="44E2C622-6BC7-457B-ACA0-E01F758258ED" />
+		</form>
+		
+		<hr/>
+		
 		<h3>Document</h3>
+		<h6>Send a document for signature (no templates). Signature area is added to the doc at the time of 
+		sending via x,y coordinates</h6>
 		<div class="userInputForm">
 			<div class="row collapse">
 				<div class="one columns">
@@ -81,44 +123,12 @@
 			<div class="row collapse">
 				<div class="eleven offset-by-one columns">
 					<input type="button" class="button" value="Send" onclick="DsGlobal.sendDoc()" />
-					<a href="${context}/resources/pdfs/Hello World.pdf" target="_blank">This document</a> will be sent for signature
+					<a href="${context}/resources/pdfs/Hello World.pdf" target="_blank">Document</a>
 				</div>
 			</div>
 		</div>
 		
 		<hr/>
-		
-		<h3>Composite Template</h3>
-		<form class="userInputForm" id="compTemplateForm">
-			<div class="row collapse">
-				<div class="one columns">
-					<label class="inline">Insured Email</label>
-				</div>
-				<div class="four columns end">
-					<input type="text" id="compTemplateInsuredEmail" name="insEmail" />
-				</div>
-			</div>
-			<div class="row collapse">
-				<div class="one columns">
-					<label class="inline">Producer Email</label>
-				</div>
-				<div class="four columns end">
-					<input type="text" id="compTemplateProducerEmail" name="agtEmail" placeholder="optional" />
-				</div>
-			</div>
-			<div class="row collapse">
-				<div class="eleven offset-by-one columns">
-					<input type="button" class="button" value="Send" onclick="DsGlobal.sendCompositeTemplate()" />
-				</div>
-			</div>
-			
-			<input type="hidden" name="templateId" value="AC626C30-21BF-4BF7-9774-46B5EEEEF93D" />
-			<input type="hidden" name="document" value="/resources/pdfs/Hello World.pdf" />
-		</form>
-		
-		<hr/>
-		<h3>TODO</h3>
-		<h6>Composite template overlay on document</h6>
 		
 		<div class="panel display-none" id="responseOutput"></div>
 		
