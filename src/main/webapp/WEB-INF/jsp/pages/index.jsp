@@ -74,6 +74,14 @@
 			</div>
 			<div class="row collapse">
 				<div class="one columns">
+					<label class="inline">Producer Email</label>
+				</div>
+				<div class="four columns end">
+					<input type="text" id="compTemplateProducerEmail" name="agtEmail" placeholder="optional" />
+				</div>
+			</div>
+			<div class="row collapse">
+				<div class="one columns">
 					<label class="inline">Document</label>
 				</div>
 				<div class="four columns end">
@@ -83,6 +91,9 @@
 						</option>
 						<option value="/resources/pdfs/Suppl_App_H4.pdf">
 							Supplemental App (UW questions) H4 California
+						</option>
+						<option value="/resources/pdfs/acord_H4.pdf">
+							Acord H4 CA
 						</option>
 					</select>
 				</div>
@@ -94,8 +105,6 @@
 					<a href="${context}/resources/pdfs/Suppl_App_H4.pdf" target="_blank">H4 CA</a>
 				</div>
 			</div>
-			
-			<input type="hidden" name="templateId" value="44E2C622-6BC7-457B-ACA0-E01F758258ED" />
 		</form>
 		
 		<hr/>

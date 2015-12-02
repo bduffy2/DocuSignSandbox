@@ -3,7 +3,10 @@ package com.stillwaterinsurance.docusign.controller;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import javax.servlet.http.HttpSession;
@@ -28,6 +31,8 @@ public class DocumentsController {
 
 	@Autowired
 	private DocuSignService signatureService;
+	
+	private static final Map<String, String> DOC_TEMPLATES;
 	
 	@RequestMapping(value={"/sendDocument"}, method=RequestMethod.POST)
 	public ResponseEntity<String> sendDoc(final ModelAndView mav, final HttpSession session,
@@ -94,7 +99,6 @@ public class DocumentsController {
 	
 	@RequestMapping(value={"/sendCompositeTemplate"}, method=RequestMethod.POST)
 	public ResponseEntity<String> sendCompTemplate(final ModelAndView mav, final HttpSession session,
-			@RequestParam(value="templateId") final String templateId,
 			@RequestParam(value="document") final String document,
 			@RequestParam(value="insEmail") final String insEmail,
 			@RequestParam(value="agtEmail", required=false) final String agtEmail) {
@@ -119,6 +123,9 @@ public class DocumentsController {
 		final String s = session.getServletContext().getRealPath("/");
 		final File file = new File(s + document);
 		
+		String templateId = DOC_TEMPLATES.containsKey(document) ? 
+				DOC_TEMPLATES.get(document) : "44E2C622-6BC7-457B-ACA0-E01F758258ED";
+		
 		try {
 			response = signatureService.requestSignatureCompositeTemplate(file, templateId, roles, names, emails);
 			response.replaceAll("\n", "<br>");
@@ -138,6 +145,14 @@ public class DocumentsController {
 		
 		return FIRST_NAMES[random.nextInt(FIRST_NAMES.length)] + 
 				" " + LAST_NAMES[random.nextInt(LAST_NAMES.length)];
+	}
+	
+	static {
+		Map<String, String >map = new HashMap<String, String>();
+		map.put("/resources/pdfs/Suppl_App_H3.pdf", "44E2C622-6BC7-457B-ACA0-E01F758258ED");
+		map.put("/resources/pdfs/Suppl_App_H4.pdf", "44E2C622-6BC7-457B-ACA0-E01F758258ED");
+		map.put("/resources/pdfs/acord_H4.pdf", "1EDD0786-6313-4789-81BF-CA60CECA41CC");
+		DOC_TEMPLATES = Collections.unmodifiableMap(map);
 	}
 	
 }
