@@ -160,12 +160,12 @@ public class DocuSignService {
 							"<email>" + recipientEmail + "</email>" +
 							"<tabs>" + 
 								"<signHereTabs>" + 
-								"<signHere>" + 
-								"<xPosition>100</xPosition>" + 
-								"<yPosition>100</yPosition>" + 
-								"<documentId>1</documentId>" + 
-								"<pageNumber>1</pageNumber>" + 
-								"</signHere>" +
+									"<signHere>" + 
+										"<xPosition>100</xPosition>" + 
+										"<yPosition>100</yPosition>" + 
+										"<documentId>1</documentId>" + 
+										"<pageNumber>1</pageNumber>" + 
+									"</signHere>" +
 								"</signHereTabs>" + 
 							"</tabs>" + 
 						"</signer>" + 
@@ -221,6 +221,45 @@ public class DocuSignService {
 				"Signature request has been sent to " + recipientEmail + "!\nEnvelopeId is:  " + envelopeId + "\n");
 		
 		return result.toString();
+	}
+	
+	public String requestSignatureSupplApp(final File pdf, final String recipientName, 
+			final String recipientEmail) throws IOException {
+		
+		final String body = Json.createObjectBuilder()
+				.add("emailSubject", "Brandon TEST - Supplemental App")
+				.add("status", "sent")
+				.add("documents", Json.createArrayBuilder().add(Json.createObjectBuilder()
+						.add("documentId", "1")
+						.add("name", pdf.getName())))
+				.add("recipients", Json.createObjectBuilder()
+						.add("signers", Json.createArrayBuilder().add(Json.createObjectBuilder()
+								.add("recipientId", "1")
+								.add("name", recipientName)
+								.add("email", recipientEmail)
+								.add("tabs", Json.createObjectBuilder()
+										.add("signHereTabs", Json.createArrayBuilder().add(Json.createObjectBuilder()
+												.add("documentId", "1")
+												.add("anchorString", "INSURED NAME - SIGNATURE")
+												.add("anchorXOffset", "10")
+												.add("anchorYOffset", "-1")
+												.add("anchorUnits", "pixels")
+												.add("scaleValue", "0.6")))
+										.add("fullNameTabs", Json.createArrayBuilder().add(Json.createObjectBuilder()
+												.add("documentId", "1")
+												.add("anchorString", "INSURED NAME - PRINT")
+												.add("anchorXOffset", "0")
+												.add("anchorYOffset", "-11")
+												.add("anchorUnits", "pixels")))
+										.add("dateSignedTabs", Json.createArrayBuilder().add(Json.createObjectBuilder()
+												.add("documentId", "1")
+												.add("anchorString", "DATE SIGNED")
+												.add("anchorXOffset", "0")
+												.add("anchorYOffset", "-11")
+												.add("anchorUnits", "pixels")))))))
+				.build().toString();
+		
+		return multipartRequest(body, pdf);
 	}
 	
 	/**
@@ -344,7 +383,14 @@ public class DocuSignService {
 												.add("email", emails.get(0))
 												.add("name", names.get(0))
 												.add("recipientId", "1")
-												.add("roleName", roles.get(0)))))))
+												.add("roleName", roles.get(0))
+												.add("tabs", Json.createObjectBuilder().
+														add("signHereTabs", Json.createArrayBuilder().add(Json.createObjectBuilder()
+																.add("anchorString", "STATUS OF TRANSACTION")
+																.add("anchorXOffset", "0")
+																.add("anchorYOffset", "0")
+																.add("anchorIgnoreIfNotPresent", "false")
+																.add("anchorUnits", "pixels")))))))))
 						.add("document", Json.createObjectBuilder()
 								.add("documentId", "1")
 								.add("name", pdf.getName()))))

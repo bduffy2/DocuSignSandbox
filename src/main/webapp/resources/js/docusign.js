@@ -1,5 +1,5 @@
 
-(function ($) {
+(function ($, swGlobal) {
 	"use strict";
 	
 	var _DS = {};
@@ -15,7 +15,6 @@
 		$('#responseOutput').hide();
 		
 		var email = $('#sendToEmail').val();
-		var name = $('#sendToName').val();
 		
 		if(validateEmail(email)) {
 			$.ajax({
@@ -23,7 +22,6 @@
 				url: _CONTEXT + "/docs/sendDocument",
 				data: {
 					document: '/resources/pdfs/Hello World.pdf',
-					name: name,
 					email: email
 				},
 				beforeSend: _DS.showLoadingModal,
@@ -47,7 +45,7 @@
 		$('#responseOutput').hide();
 		
 		if(validateEmail($('#ohqInsuredEmail').val())) {
-			ajaxSendTemplate("/docs/sendTemplate", $('#ohqForm').serialize());
+			ajaxPostHelper("/docs/sendTemplate", $('#ohqForm').serialize());
 		}
 	};
 	
@@ -55,11 +53,19 @@
 		$('#responseOutput').hide();
 		
 		if(validateEmail($('#compTemplateInsuredEmail').val())) {
-			ajaxSendTemplate("/docs/sendCompositeTemplate", $('#compTemplateForm').serialize());
+			ajaxPostHelper("/docs/sendCompositeTemplate", $('#compTemplateForm').serialize());
 		}
 	};
 	
-	function ajaxSendTemplate(url, data) {
+	_DS.sendSupplApp = function() {
+		$('#responseOutput').hide();
+		
+		if(validateEmail($('#documentInsuredEmail').val())) {
+			ajaxPostHelper('/docs/sendSupplApp', $('#documentForm').serialize())
+		}
+	};
+	
+	function ajaxPostHelper(url, data) {
 		$.ajax({
 			type: 'POST',
 			url: _CONTEXT + url,
@@ -99,7 +105,7 @@
 		
 		if (LOADING_MODAL_COUNT === 0)
 		{
-			$("#pageLoadingSpinner").spin(SwGlobal.spinOptions);
+			$("#pageLoadingSpinner").spin(swGlobal.spinOptions);
 		}
 		
 		LOADING_MODAL_COUNT++;
@@ -133,4 +139,4 @@
 		window.DsGlobal = _DS;
 	}
 	
-}(window.jQuery));
+}(window.jQuery, window.SwGlobal));

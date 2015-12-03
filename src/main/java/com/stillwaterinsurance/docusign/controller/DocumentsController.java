@@ -37,8 +37,7 @@ public class DocumentsController {
 	@RequestMapping(value={"/sendDocument"}, method=RequestMethod.POST)
 	public ResponseEntity<String> sendDoc(final ModelAndView mav, final HttpSession session,
 			@RequestParam(value="document") final String document,
-			@RequestParam(value="email") final String email,
-			@RequestParam(value="name", required=false) String name) {
+			@RequestParam(value="email") final String email) {
 		
 		HttpStatus status = HttpStatus.OK;
 		String response = "";
@@ -46,12 +45,31 @@ public class DocumentsController {
 		final String s = session.getServletContext().getRealPath("/");
 		final File file = new File(s + document);
 		
-		if(name == null || name.trim().isEmpty()) {
-			name = randomName();
+		try {
+			response = signatureService.requestSignatureDocument(file, randomName(), email);
+			response.replaceAll("\n", "<br>");
+		} catch(IOException e) {
+			LOGGER.error("An I/O exception occurred while sending PDF request", e);
+			status = HttpStatus.INTERNAL_SERVER_ERROR;
+			response = e.getMessage();
 		}
 		
+		return new ResponseEntity<String>(response, status);
+	}
+	
+	@RequestMapping(value={"/sendSupplApp"}, method=RequestMethod.POST)
+	public ResponseEntity<String> sendSupplApp(final ModelAndView mav, final HttpSession session,
+			@RequestParam(value="document") final String document,
+			@RequestParam(value="insEmail") final String insEmail) {
+		
+		HttpStatus status = HttpStatus.OK;
+		String response = "";
+		
+		final String s = session.getServletContext().getRealPath("/");
+		final File file = new File(s + document);
+		
 		try {
-			response = signatureService.requestSignatureDocument(file, name, email);
+			response = signatureService.requestSignatureSupplApp(file, randomName(), insEmail);
 			response.replaceAll("\n", "<br>");
 		} catch(IOException e) {
 			LOGGER.error("An I/O exception occurred while sending PDF request", e);

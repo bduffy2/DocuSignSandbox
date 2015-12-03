@@ -30,6 +30,7 @@ public class TestDocuSignService {
 			String response = signatureService.requestSignatureAcordApp(file, roles, names, emails);
 			System.out.println(response);
 			assertNotNull(response);
+			assertTrue(response.contains("envelopeId"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -51,6 +52,32 @@ public class TestDocuSignService {
 		try {
 			String response = signatureService.requestSignatureCompositeTemplate(file, templateId, 
 					roles, names, emails);
+			System.out.println(response);
+			assertNotNull(response);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
+	public void testRequestSignatureSupplAppH4() {
+		final File file = new File("src/main/webapp/resources/pdfs/Suppl_App_H4.pdf");
+		
+		try {
+			String response = signatureService.requestSignatureSupplApp(file, "Jack Trice", "brandon.duffy@stillwater.com");
+			System.out.println(response);
+			assertNotNull(response);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
+	public void testRequestSignatureSupplAppH3() {
+		final File file = new File("src/main/webapp/resources/pdfs/Suppl_App_H3.pdf");
+		
+		try {
+			String response = signatureService.requestSignatureSupplApp(file, "Jack Trice", "brandon.duffy@stillwater.com");
 			System.out.println(response);
 			assertNotNull(response);
 		} catch (IOException e) {

@@ -31,7 +31,8 @@
 		<hr/>
 		
 		<h3>Template</h3>
-		<h6>Uses a template that is hosted by DocuSign (Older Home Questionnaire)</h6>
+		<h6>Uses a template that is hosted by DocuSign (Older Home Questionnaire). This is the most straightforward
+		way to send a doc if it is static</h6>
 		<form class="userInputForm" id="ohqForm">
 			<div class="row collapse">
 				<div class="one columns">
@@ -101,8 +102,9 @@
 			<div class="row collapse">
 				<div class="eleven offset-by-one columns">
 					<input type="button" class="button" value="Send" onclick="DsGlobal.sendCompositeTemplate()" />
-					<a href="${context}/resources/pdfs/Suppl_App_H3.pdf" target="_blank">H3 CA</a>&nbsp;&nbsp;
-					<a href="${context}/resources/pdfs/Suppl_App_H4.pdf" target="_blank">H4 CA</a>
+					<a href="${context}/resources/pdfs/Suppl_App_H3.pdf" target="_blank">Suppl H3 CA</a>&nbsp;&nbsp;
+					<a href="${context}/resources/pdfs/Suppl_App_H4.pdf" target="_blank">Suppl H4 CA</a>&nbsp;&nbsp;
+					<a href="${context}/resources/pdfs/acord_H4.pdf" target="_blank">Acord H4 CA</a>
 				</div>
 			</div>
 		</form>
@@ -110,32 +112,41 @@
 		<hr/>
 		
 		<h3>Document</h3>
-		<h6>Send a document for signature (no templates). Signature area is added to the doc at the time of 
-		sending via x,y coordinates</h6>
-		<div class="userInputForm">
+		<h6>Send a document for signature (no templates). Tags are added to the doc at the time of 
+		sending via anchoring to specific text in the document. This seems to be simpler than 
+		dealing with composite templates</h6>
+		<form class="userInputForm" id="documentForm">
 			<div class="row collapse">
 				<div class="one columns">
-					<label class="inline">Name</label>
+					<label class="inline">Insured Email</label>
 				</div>
 				<div class="four columns end">
-					<input type="text" id="sendToName" placeholder="optional" />
+					<input type="text" id="documentInsuredEmail" name="insEmail" />
 				</div>
 			</div>
 			<div class="row collapse">
 				<div class="one columns">
-					<label class="inline">Email</label>
+					<label class="inline">Document</label>
 				</div>
 				<div class="four columns end">
-					<input type="text" id="sendToEmail" name="email"/>
+					<select name="document">
+						<option value="/resources/pdfs/Suppl_App_H3.pdf">
+							Supplemental App (UW questions) H3 California
+						</option>
+						<option value="/resources/pdfs/Suppl_App_H4.pdf">
+							Supplemental App (UW questions) H4 California
+						</option>
+					</select>
 				</div>
 			</div>
 			<div class="row collapse">
 				<div class="eleven offset-by-one columns">
-					<input type="button" class="button" value="Send" onclick="DsGlobal.sendDoc()" />
-					<a href="${context}/resources/pdfs/Hello World.pdf" target="_blank">Document</a>
+					<input type="button" class="button" value="Send" onclick="DsGlobal.sendSupplApp()" />
+					<a href="${context}/resources/pdfs/Suppl_App_H3.pdf" target="_blank">H3 CA</a>&nbsp;&nbsp;
+					<a href="${context}/resources/pdfs/Suppl_App_H4.pdf" target="_blank">H4 CA</a>
 				</div>
 			</div>
-		</div>
+		</form>
 		
 		<hr/>
 		
