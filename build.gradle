@@ -110,6 +110,9 @@ dependencies {
     def SPRING_VER = '4.0.6.RELEASE'
     compile "org.springframework:spring-webmvc:$SPRING_VER"
     compile "org.springframework:spring-context-support:$SPRING_VER"
+    testCompile "org.springframework:spring-test:$SPRING_VER"
+    
+    testCompile "junit:junit:4.11"
     
     compile "javax.servlet:jstl:1.2"
     compile "jstl:jstl:1.2"

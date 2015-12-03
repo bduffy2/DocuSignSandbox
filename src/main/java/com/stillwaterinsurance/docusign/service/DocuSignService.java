@@ -10,12 +10,12 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -43,6 +43,44 @@ public class DocuSignService {
 	
 	@Value("${credentials.password}")
 	private String password;
+	
+	public DocuSignService() {}
+	
+	public DocuSignService(String integratorKey, String username, String password) {
+		this.integratorKey = integratorKey;
+		this.username = username;
+		this.password = password;
+	}
+	
+	
+	public String loginRequest() throws IOException {
+		StringBuilder result = new StringBuilder();
+
+		String url = "https://demo.docusign.net/restapi/v2/login_information";
+		String body = ""; // no request body for the login call
+
+		// create connection object, set request method, add request headers
+		HttpURLConnection conn = initializeRequest(url, "GET", body, getAuthHeader());
+
+		// send the request
+		result.append("STEP 1:  Sending Login request...\n");
+		int status = conn.getResponseCode();
+		if (status != 200) // 200 = OK
+		{
+			result.append(errorParse(conn, status));
+			return result.toString();
+		}
+
+		// obtain baseUrl and accountId values from response body
+		String response = getResponseBody(conn);
+		try{
+			result.append("-- Login response --\n\n" + prettyFormat(response, 2) + "\n");
+		} catch(Exception e) {
+			result.append("-- Login response --\n\n" + response + "\n");
+		}
+		
+		return result.toString();
+	}
 
 	/**
 	 * Send a document for signature
@@ -56,14 +94,6 @@ public class DocuSignService {
 			final String recipientEmail) throws IOException {
 		
 		StringBuilder result = new StringBuilder();
-		
-		// construct the DocuSign authentication header
-		String authenticationHeader = 
-				"<DocuSignCredentials>" + 
-					"<Username>" + username + "</Username>" +
-					"<Password>" + password + "</Password>" + 
-					"<IntegratorKey>" + integratorKey + "</IntegratorKey>" + 
-				"</DocuSignCredentials>";
 
 		String baseURL = ""; // we will retrieve this through the Login API call
 		String envelopeId = ""; // generated from signature request API call
@@ -81,7 +111,7 @@ public class DocuSignService {
 		body = ""; // no request body for the login call
 
 		// create connection object, set request method, add request headers
-		conn = initializeRequest(url, "GET", body, authenticationHeader);
+		conn = initializeRequest(url, "GET", body, getAuthHeader());
 
 		// send the request
 		result.append("STEP 1:  Sending Login request...\n");
@@ -144,7 +174,7 @@ public class DocuSignService {
 			"</envelopeDefinition>";
 
 		// re-use connection object for second request...
-		conn = initializeRequest(url, "POST", body, authenticationHeader);
+		conn = initializeRequest(url, "POST", body, getAuthHeader());
 
 		// read document content into byte array
 		InputStream inputStream = new FileInputStream(pdfFile);
@@ -206,78 +236,29 @@ public class DocuSignService {
 			List<String> names, List<String> emails) throws IOException {
 
 		StringBuilder result = new StringBuilder();
-		
-		// first we construct the DocuSign authentication header (can be XML or JSON format)
-		String authenticationHeader = 
-					"<DocuSignCredentials>" + 
-						"<Username>" + username + "</Username>" +
-						"<Password>" + password + "</Password>" + 
-						"<IntegratorKey>" + integratorKey + "</IntegratorKey>" + 
-					"</DocuSignCredentials>";
-		
-		// additional variable declarations
-		String baseURL = ""; // we will retrieve this through the Login API call
-		String accountId = ""; // we will retrieve this through the Login API call
-		String url = ""; // end-point for each api call
-		String body = ""; // request body
-		String response = ""; // response body
-		int status; // response status
-		HttpURLConnection conn = null;	// connection object used for each request
-		
-		//============================================================================
-		// STEP 1 - Make the Login API call to retrieve your baseUrl and accountId
-		//============================================================================
-		
-		url = "https://demo.docusign.net/restapi/v2/login_information";
-		body = "";	// no request body for the login call
-		
-		// create connection object, set request method, add request headers
-		conn = initializeRequest(url, "GET", body, authenticationHeader);
-		
-		// send the request
-		result.append("STEP 1:  Sending Login request...\n");
-		status = conn.getResponseCode();
-		if( status != 200 )	// 200 = OK
-		{
-			result.append(errorParse(conn, status));
-			return result.toString();
-		}
-		
-		// obtain baseUrl and accountId values from response body 
-		response = getResponseBody(conn);
-		baseURL = parseXMLBody(response, "baseUrl");
-		accountId = parseXMLBody(response, "accountId");
-		result.append("-- Login response --\n\n" + prettyFormat(response, 2) + "\n");
-		
-		//============================================================================
-		// STEP 2 - Signature Request from Template API Call
-		//============================================================================
-		
-		url = baseURL + "/envelopes";	// append "/envelopes" to baseUrl for signature request call
 
-		final JsonObjectBuilder roleInsured = Json.createObjectBuilder()
+		final JsonArrayBuilder templateRoles = Json.createArrayBuilder().add(Json.createObjectBuilder()
 				.add("name", names.get(0))
 				.add("email", emails.get(0))
-				.add("roleName", roles.get(0));
-		final JsonArrayBuilder templateRoles = Json.createArrayBuilder().add(roleInsured);
+				.add("roleName", roles.get(0)));
 		if(names.size() > 1 && emails.size() > 1 && roles.size() > 1) {
-			final JsonObjectBuilder roleAgent = Json.createObjectBuilder()
+			templateRoles.add(Json.createObjectBuilder()
 					.add("name", names.get(1))
 					.add("email", emails.get(1))
-					.add("roleName", roles.get(1));
-			templateRoles.add(roleAgent);
+					.add("roleName", roles.get(1)));
 		}
 		
-		body = Json.createObjectBuilder().add("accountId", accountId)
+		String body = Json.createObjectBuilder()
 				.add("emailSubject", "DocuSign API Call - Signature request from template")
 				.add("templateId", templateId)
 				.add("status", "sent")
 				.add("templateRoles", templateRoles)
 				.build().toString();
 		
-		conn = (HttpURLConnection) new URL(url).openConnection();
+		String url = "https://demo.docusign.net/restapi/v2/accounts/1273564/envelopes";
+		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 		conn.setRequestMethod("POST");
-		conn.setRequestProperty("X-DocuSign-Authentication", authenticationHeader);
+		conn.setRequestProperty("X-DocuSign-Authentication", getAuthHeader());
 		conn.setRequestProperty("Content-Type", "application/json");
 		conn.setRequestProperty("Accept", "application/json");
 		conn.setRequestProperty("Content-Length", Integer.toString(body.length()));
@@ -287,7 +268,7 @@ public class DocuSignService {
 		dos.writeBytes(body); dos.flush(); dos.close();
 		
 		result.append("STEP 2:  Sending signature request from template...\n");
-		status = conn.getResponseCode(); // triggers the request
+		int status = conn.getResponseCode(); // triggers the request
 		if( status != 201 )	// 201 = Created
 		{
 			result.append(errorParse(conn, status));
@@ -302,68 +283,17 @@ public class DocuSignService {
 	/**
 	 * Send a document for signature via template
 	 * 
-	 * @param pdfFile the base document
+	 * @param pdf the base document
 	 * @param templateId The overlay template
 	 * @param roleName valid template role name
 	 * @param recipientName recipient (signer) name
 	 * @param recipientEmail recipient (signer) email	
 	 * @throws IOException
 	 */
-	public String requestSignatureCompositeTemplate(File pdfFile, String templateId, List<String> roles, 
+	public String requestSignatureCompositeTemplate(File pdf, String templateId, List<String> roles, 
 			List<String> names, List<String> emails) throws IOException {
-
-		StringBuilder result = new StringBuilder();
 		
-		// first we construct the DocuSign authentication header (can be XML or JSON format)
-		String authenticationHeader = 
-					"<DocuSignCredentials>" + 
-						"<Username>" + username + "</Username>" +
-						"<Password>" + password + "</Password>" + 
-						"<IntegratorKey>" + integratorKey + "</IntegratorKey>" + 
-					"</DocuSignCredentials>";
-		
-		// additional variable declarations
-		String baseURL = ""; // we will retrieve this through the Login API call
-		String accountId = ""; // we will retrieve this through the Login API call
-		String url = ""; // end-point for each api call
-		String body = ""; // request body
-		String response = ""; // response body
-		int status; // response status
-		HttpURLConnection conn = null;	// connection object used for each request
-		
-		//============================================================================
-		// STEP 1 - Make the Login API call to retrieve your baseUrl and accountId
-		//============================================================================
-		
-		url = "https://demo.docusign.net/restapi/v2/login_information";
-		body = "";	// no request body for the login call
-		
-		// create connection object, set request method, add request headers
-		conn = initializeRequest(url, "GET", body, authenticationHeader);
-		
-		// send the request
-		result.append("STEP 1:  Sending Login request...\n");
-		status = conn.getResponseCode();
-		if( status != 200 )	// 200 = OK
-		{
-			result.append(errorParse(conn, status));
-			return result.toString();
-		}
-		
-		// obtain baseUrl and accountId values from response body 
-		response = getResponseBody(conn);
-		baseURL = parseXMLBody(response, "baseUrl");
-		accountId = parseXMLBody(response, "accountId");
-		result.append("-- Login response --\n\n" + prettyFormat(response, 2) + "\n");
-		
-		//============================================================================
-		// STEP 2 - Signature Request from Template API Call
-		//============================================================================
-		
-		url = baseURL + "/envelopes";	// append "/envelopes" to baseUrl for signature request call
-		
-		body = Json.createObjectBuilder()
-				.add("accountId", accountId)
+		final String body = Json.createObjectBuilder()
 				.add("emailSubject", "Brandon - testing template overlay")
 				.add("status", "sent")
 				.add("compositeTemplates", Json.createArrayBuilder().add(Json.createObjectBuilder()
@@ -380,26 +310,78 @@ public class DocuSignService {
 												.add("roleName", roles.get(0)))))))
 						.add("document", Json.createObjectBuilder()
 								.add("documentId", "1")
-								.add("name", pdfFile.getName()))))
+								.add("name", pdf.getName()))))
 				.build().toString();
 		
-		conn = (HttpURLConnection) new URL(url).openConnection();
+		return multipartRequest(body, pdf);
+	}
+	
+	/**
+	 * Send Acord app for signature
+	 * 
+	 * @param pdf the Acord doc
+	 * @param roleName valid template role name
+	 * @param recipientName recipient (signer) name
+	 * @param recipientEmail recipient (signer) email	
+	 * @throws IOException
+	 */
+	public String requestSignatureAcordApp(File pdf, List<String> roles, List<String> names, 
+			List<String> emails) throws IOException {
+		
+		final String templateId = "1EDD0786-6313-4789-81BF-CA60CECA41CC";
+		
+		final String body = Json.createObjectBuilder()
+				.add("emailSubject", "Brandon TEST - ACORD app")
+				.add("status", "sent")
+				.add("compositeTemplates", Json.createArrayBuilder().add(Json.createObjectBuilder()
+						.add("serverTemplates", Json.createArrayBuilder().add(Json.createObjectBuilder()
+								.add("sequence", "1")
+								.add("templateId", templateId)))
+						.add("inlineTemplates", Json.createArrayBuilder().add(Json.createObjectBuilder()
+								.add("sequence", "1")
+								.add("recipients", Json.createObjectBuilder()
+										.add("signers", Json.createArrayBuilder().add(Json.createObjectBuilder()
+												.add("email", emails.get(0))
+												.add("name", names.get(0))
+												.add("recipientId", "1")
+												.add("roleName", roles.get(0)))))))
+						.add("document", Json.createObjectBuilder()
+								.add("documentId", "1")
+								.add("name", pdf.getName()))))
+				.build().toString();
+		
+		return multipartRequest(body, pdf);
+	}
+	
+	
+	/**
+	 * Send a multipart signature request
+	 * 
+	 * @param body the body part of the request (JSON string)
+	 * @param pdf the document part of the request
+	 * @return A string outlining the request and response
+	 */
+	private String multipartRequest(String body, File pdf) throws MalformedURLException, IOException {
+		StringBuilder result = new StringBuilder();
+		
+		String url = "https://demo.docusign.net/restapi/v2/accounts/1273564/envelopes";
+		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 		conn.setRequestMethod("POST");
-		conn.setRequestProperty("X-DocuSign-Authentication", authenticationHeader);
+		conn.setRequestProperty("X-DocuSign-Authentication", getAuthHeader());
 		conn.setRequestProperty("Accept", "application/json");
 		conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=BOUNDARY");
 		conn.setDoOutput(true);
 		
 		// read document content into byte array
-		InputStream inputStream = new FileInputStream(pdfFile);
-		byte[] bytes = new byte[(int) pdfFile.length()];
+		InputStream inputStream = new FileInputStream(pdf);
+		byte[] bytes = new byte[(int) pdf.length()];
 		inputStream.read(bytes);
 		inputStream.close();
 		
 		// start constructing the multipart/form-data request...
 		String requestBody = "\r\n\r\n--BOUNDARY\r\n" + "Content-Type: application/json\r\n"
 				+ "Content-Disposition: form-data\r\n" + "\r\n" + body + "\r\n\r\n--BOUNDARY\r\n" + 
-				"Content-Type: application/pdf \r\n" + "Content-Disposition: file; filename=\"" + pdfFile.getName()
+				"Content-Type: application/pdf \r\n" + "Content-Disposition: file; filename=\"" + pdf.getName()
 				+ "\"; documentid=1\r\n" + "\r\n";
 		
 		DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
@@ -409,19 +391,27 @@ public class DocuSignService {
 		dos.flush();
 		dos.close();
 		
-		result.append("STEP 2:  Sending signature request from template...\n");
-		status = conn.getResponseCode(); // triggers the request
+		result.append("Sending signature request from template...\n");
+		result.append(requestBody);
+		int status = conn.getResponseCode(); // triggers the request
 		if( status != 201 )	// 201 = Created
 		{
 			result.append(errorParse(conn, status));
 			return result.toString();
 		}
 		 
-		result.append("-- Signature Request response --\n\n" + getResponseBody(conn));
+		result.append("\n\n-- Signature Request response --\n\n" + getResponseBody(conn));
 		
 		return result.toString();
 	}
 	
+	private String getAuthHeader() {
+		return	"<DocuSignCredentials>" + 
+					"<Username>" + username + "</Username>" +
+					"<Password>" + password + "</Password>" + 
+					"<IntegratorKey>" + integratorKey + "</IntegratorKey>" + 
+				"</DocuSignCredentials>";
+	}
 	
 	private HttpURLConnection initializeRequest(String url, String method, String body, String httpAuthHeader) {
 		HttpURLConnection conn = null;
