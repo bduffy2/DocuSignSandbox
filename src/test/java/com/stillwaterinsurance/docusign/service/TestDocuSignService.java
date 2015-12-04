@@ -1,3 +1,4 @@
+package com.stillwaterinsurance.docusign.service;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -33,6 +34,7 @@ public class TestDocuSignService {
 			assertTrue(response.contains("envelopeId"));
 		} catch (IOException e) {
 			e.printStackTrace();
+			fail();
 		}
 	}
 	
@@ -54,8 +56,10 @@ public class TestDocuSignService {
 					roles, names, emails);
 			System.out.println(response);
 			assertNotNull(response);
+			assertTrue(response.contains("envelopeId"));
 		} catch (IOException e) {
 			e.printStackTrace();
+			fail();
 		}
 	}
 	
@@ -67,8 +71,10 @@ public class TestDocuSignService {
 			String response = signatureService.requestSignatureSupplApp(file, "Jack Trice", "brandon.duffy@stillwater.com");
 			System.out.println(response);
 			assertNotNull(response);
+			assertTrue(response.contains("envelopeId"));
 		} catch (IOException e) {
 			e.printStackTrace();
+			fail();
 		}
 	}
 	
@@ -80,8 +86,10 @@ public class TestDocuSignService {
 			String response = signatureService.requestSignatureSupplApp(file, "Jack Trice", "brandon.duffy@stillwater.com");
 			System.out.println(response);
 			assertNotNull(response);
+			assertTrue(response.contains("envelopeId"));
 		} catch (IOException e) {
 			e.printStackTrace();
+			fail();
 		}
 	}
 }
