@@ -364,7 +364,7 @@ public class DocuSignService {
 	 * @param recipientEmail recipient (signer) email	
 	 * @throws IOException
 	 */
-	public String requestSignatureAcordApp(File pdf, List<String> roles, List<String> names, 
+	public String requestSignatureAcordAppTemplate(File pdf, List<String> roles, List<String> names, 
 			List<String> emails) throws IOException {
 		
 		final String templateId = "1EDD0786-6313-4789-81BF-CA60CECA41CC";
@@ -394,6 +394,110 @@ public class DocuSignService {
 						.add("document", Json.createObjectBuilder()
 								.add("documentId", "1")
 								.add("name", pdf.getName()))))
+				.build().toString();
+		
+		return multipartRequest(body, pdf);
+	}
+	
+	/**
+	 * Send Acord Application for signature
+	 * 
+	 * @param pdf the Acord pdf
+	 * @param name the name of the recipient
+	 * @param email the address to send the request to
+	 * @return A string outlining the request and response
+	 */
+	public String requestSignatureAcordApp(final File pdf, final String name, final String email) throws IOException {
+		
+		final String body = Json.createObjectBuilder()
+				.add("emailSubject", "TEST - Acord App")
+				.add("status", "sent")
+				.add("documents", Json.createArrayBuilder().add(Json.createObjectBuilder()
+						.add("documentId", "1")
+						.add("name", pdf.getName())))
+				.add("recipients", Json.createObjectBuilder()
+						.add("signers", Json.createArrayBuilder().add(Json.createObjectBuilder()
+								.add("recipientId", "1")
+								.add("name", name)
+								.add("email", email)
+								.add("tabs", Json.createObjectBuilder()
+										.add("signHereTabs", Json.createArrayBuilder().add(Json.createObjectBuilder()
+												.add("documentId", "1")
+												.add("anchorString", "APPLICANT'S SIGNATURE")
+												.add("anchorXOffset", "110")
+												.add("anchorYOffset", "31")
+												.add("anchorUnits", "pixels")
+												.add("scaleValue", "0.6")))
+										.add("dateSignedTabs", Json.createArrayBuilder().add(Json.createObjectBuilder()
+												.add("documentId", "1")
+												.add("anchorString", "APPLICANT'S SIGNATURE")
+												.add("anchorXOffset", "550")
+												.add("anchorYOffset", "12")
+												.add("anchorUnits", "pixels")))
+										))))
+				.build().toString();
+		
+		return multipartRequest(body, pdf);
+	}
+	
+	/**
+	 * Send Acord App/Supplemental App (combined) for signature
+	 * 
+	 * @param pdf the combined Acord and Supplemental pdfs
+	 * @param name the name of the recipient
+	 * @param email the address to send the request to
+	 * @return A string outlining the request and response
+	 */
+	public String requestSignatureAcordSupplCombined(final File pdf, final String name, final String email) throws IOException {
+		
+		final String body = Json.createObjectBuilder()
+				.add("emailSubject", "TEST - Acord/Suppl App")
+				.add("status", "sent")
+				.add("documents", Json.createArrayBuilder().add(Json.createObjectBuilder()
+						.add("documentId", "1")
+						.add("name", pdf.getName())))
+				.add("recipients", Json.createObjectBuilder()
+						.add("signers", Json.createArrayBuilder().add(Json.createObjectBuilder()
+								.add("recipientId", "1")
+								.add("name", name)
+								.add("email", email)
+								.add("tabs", Json.createObjectBuilder()
+										.add("signHereTabs", Json.createArrayBuilder()
+												.add(Json.createObjectBuilder()
+														.add("documentId", "1")
+														.add("anchorString", "APPLICANT'S SIGNATURE")
+														.add("anchorXOffset", "110")
+														.add("anchorYOffset", "31")
+														.add("anchorUnits", "pixels")
+														.add("scaleValue", "0.6"))
+												.add(Json.createObjectBuilder()
+														.add("documentId", "1")
+														.add("anchorString", "INSURED NAME - SIGNATURE")
+														.add("anchorXOffset", "10")
+														.add("anchorYOffset", "-1")
+														.add("anchorUnits", "pixels")
+														.add("scaleValue", "0.6")))
+										.add("dateSignedTabs", Json.createArrayBuilder()
+												.add(Json.createObjectBuilder()
+														.add("documentId", "1")
+														.add("anchorString", "APPLICANT'S SIGNATURE")
+														.add("anchorXOffset", "550")
+														.add("anchorYOffset", "12")
+														.add("anchorUnits", "pixels"))
+												.add(Json.createObjectBuilder()
+														.add("documentId", "1")
+														.add("anchorString", "DATE SIGNED")
+														.add("anchorXOffset", "0")
+														.add("anchorYOffset", "-11")
+														.add("anchorUnits", "pixels")))
+										.add("fullNameTabs", Json.createArrayBuilder()
+												.add(Json.createObjectBuilder()
+														.add("documentId", "1")
+														.add("anchorString", "INSURED NAME - PRINT")
+														.add("anchorXOffset", "0")
+														.add("anchorYOffset", "-11")
+														.add("anchorUnits", "pixels")))
+										))))
 				.build().toString();
 		
 		return multipartRequest(body, pdf);

@@ -28,7 +28,7 @@ public class TestDocuSignService {
 		emails.add("brandon.duffy@stillwater.com");
 		
 		try {
-			String response = signatureService.requestSignatureAcordApp(file, roles, names, emails);
+			String response = signatureService.requestSignatureAcordAppTemplate(file, roles, names, emails);
 			System.out.println(response);
 			assertNotNull(response);
 			assertTrue(response.contains("envelopeId"));
@@ -68,7 +68,8 @@ public class TestDocuSignService {
 		final File file = new File("src/main/webapp/resources/pdfs/Suppl_App_H4.pdf");
 		
 		try {
-			String response = signatureService.requestSignatureSupplApp(file, "Jack Trice", "brandon.duffy@stillwater.com");
+			String response = signatureService.requestSignatureSupplApp(file, "Jack Trice", 
+					"brandon.duffy@stillwater.com");
 			System.out.println(response);
 			assertNotNull(response);
 			assertTrue(response.contains("envelopeId"));
@@ -83,7 +84,8 @@ public class TestDocuSignService {
 		final File file = new File("src/main/webapp/resources/pdfs/Suppl_App_H3.pdf");
 		
 		try {
-			String response = signatureService.requestSignatureSupplApp(file, "Jack Trice", "brandon.duffy@stillwater.com");
+			String response = signatureService.requestSignatureSupplApp(file, "Jack Trice", 
+					"brandon.duffy@stillwater.com");
 			System.out.println(response);
 			assertNotNull(response);
 			assertTrue(response.contains("envelopeId"));
@@ -92,4 +94,37 @@ public class TestDocuSignService {
 			fail();
 		}
 	}
+	
+	@Test
+	public void testRequestSignatureAcordApp() {
+		final File file = new File("src/main/webapp/resources/pdfs/acord_H4.pdf");
+		
+		try {
+			String response = signatureService.requestSignatureAcordApp(file, "Jack Trice", 
+					"brandon.duffy@stillwater.com");
+			System.out.println(response);
+			assertNotNull(response);
+			assertTrue(response.contains("envelopeId"));
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	@Test
+	public void testRequestSignatureAcordSupplCombined() {
+		final File file = new File("src/main/webapp/resources/pdfs/AcordAndSuppl.pdf");
+		
+		try {
+			String response = signatureService.requestSignatureAcordSupplCombined(file, "Jack Trice", 
+					"brandon.duffy@stillwater.com");
+			System.out.println(response);
+			assertNotNull(response);
+			assertTrue(response.contains("envelopeId"));
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
 }
