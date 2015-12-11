@@ -7,9 +7,9 @@ public final class DocumentVO implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-	private final String id;
-	private final File file;
-	private final String name;
+	public final String id;
+	public final File file;
+	public final String name;
 	
 	public DocumentVO(String id, File file, String name) {
 		this.id = id;
@@ -21,18 +21,5 @@ public final class DocumentVO implements Serializable {
 	public String toString() {
 		return "DocumentVO [id=" + id + ", file=" + file + ", name=" + name + "]";
 	}
-	
-	public String getId() {
-		return id;
-	}
-	
-	public File getFile() {
-		return file;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
 	
 }

@@ -495,11 +495,11 @@ public class DocuSignService {
 		for(DocumentVO document : documents) {
 			dos.writeBytes("\r\n\r\n--BOUNDARY\r\n" + 
 					"Content-Type: application/pdf \r\n" + 
-					"Content-Disposition: file; filename=\"" + document.getName() + 
-					"\"; documentid=" + document.getId() + "\r\n" + "\r\n");
+					"Content-Disposition: file; filename=\"" + document.name + 
+					"\"; documentid=" + document.id + "\r\n" + "\r\n");
 			
-			InputStream inputStream = new FileInputStream(document.getFile());
-			byte[] bytes = new byte[(int) document.getFile().length()];
+			InputStream inputStream = new FileInputStream(document.file);
+			byte[] bytes = new byte[(int) document.file.length()];
 			inputStream.read(bytes);
 			inputStream.close();
 			dos.write(bytes);
