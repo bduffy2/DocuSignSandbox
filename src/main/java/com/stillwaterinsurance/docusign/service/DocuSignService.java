@@ -30,6 +30,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.xml.sax.InputSource;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.stillwaterinsurance.docusign.vo.DocumentVO;
+import com.stillwaterinsurance.docusign.vo.Envelope;
+import com.stillwaterinsurance.docusign.vo.Tabs;
+import com.stillwaterinsurance.docusign.vo.Tabs.DateSignedTab;
+import com.stillwaterinsurance.docusign.vo.Tabs.FullNameTab;
+import com.stillwaterinsurance.docusign.vo.Tabs.SignHereTab;
+
 @Service
 public class DocuSignService {
 	
@@ -43,6 +54,8 @@ public class DocuSignService {
 	
 	@Value("${credentials.password}")
 	private String password;
+	
+	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 	
 	public DocuSignService() {}
 	
@@ -67,7 +80,7 @@ public class DocuSignService {
 		int status = conn.getResponseCode();
 		if (status != 200) // 200 = OK
 		{
-			result.append(errorParse(conn, status));
+			result.append("\nError description:  \n" + errorParse(conn, status));
 			return result.toString();
 		}
 
@@ -118,7 +131,7 @@ public class DocuSignService {
 		status = conn.getResponseCode();
 		if (status != 200) // 200 = OK
 		{
-			result.append(errorParse(conn, status));
+			result.append("\nError description:  \n" + errorParse(conn, status));
 			return result.toString();
 		}
 
@@ -304,13 +317,16 @@ public class DocuSignService {
 		conn.setDoOutput(true);
 		// write body of the POST request 
 		DataOutputStream dos = new DataOutputStream( conn.getOutputStream() );
-		dos.writeBytes(body); dos.flush(); dos.close();
+		dos.writeBytes(body); 
+		dos.flush(); 
+		dos.close();
 		
-		result.append("STEP 2:  Sending signature request from template...\n");
+		result.append("Sending signature request from template...\n");
+		result.append(body + "\n\n");
 		int status = conn.getResponseCode(); // triggers the request
 		if( status != 201 )	// 201 = Created
 		{
-			result.append(errorParse(conn, status));
+			result.append("\nError description:  \n" + errorParse(conn, status));
 			return result.toString();
 		}
 		
@@ -440,67 +456,73 @@ public class DocuSignService {
 		return multipartRequest(body, pdf);
 	}
 	
-	/**
-	 * Send Acord App/Supplemental App (combined) for signature
-	 * 
-	 * @param pdf the combined Acord and Supplemental pdfs
-	 * @param name the name of the recipient
-	 * @param email the address to send the request to
-	 * @return A string outlining the request and response
-	 */
-	public String requestSignatureAcordSupplCombined(final File pdf, final String name, final String email) throws IOException {
+	public static Tabs createAcordTabs(String documentId) {
+		final SignHereTab[] signHereTabs = {
+				new SignHereTab(documentId, "APPLICANT'S SIGNATURE", "110", "31", "pixels", "0.6"),
+				new SignHereTab(documentId, "INSURED NAME - SIGNATURE", "10", "-1", "pixels", "0.6")};
 		
-		final String body = Json.createObjectBuilder()
-				.add("emailSubject", "TEST - Acord/Suppl App")
-				.add("status", "sent")
-				.add("documents", Json.createArrayBuilder().add(Json.createObjectBuilder()
-						.add("documentId", "1")
-						.add("name", pdf.getName())))
-				.add("recipients", Json.createObjectBuilder()
-						.add("signers", Json.createArrayBuilder().add(Json.createObjectBuilder()
-								.add("recipientId", "1")
-								.add("name", name)
-								.add("email", email)
-								.add("tabs", Json.createObjectBuilder()
-										.add("signHereTabs", Json.createArrayBuilder()
-												.add(Json.createObjectBuilder()
-														.add("documentId", "1")
-														.add("anchorString", "APPLICANT'S SIGNATURE")
-														.add("anchorXOffset", "110")
-														.add("anchorYOffset", "31")
-														.add("anchorUnits", "pixels")
-														.add("scaleValue", "0.6"))
-												.add(Json.createObjectBuilder()
-														.add("documentId", "1")
-														.add("anchorString", "INSURED NAME - SIGNATURE")
-														.add("anchorXOffset", "10")
-														.add("anchorYOffset", "-1")
-														.add("anchorUnits", "pixels")
-														.add("scaleValue", "0.6")))
-										.add("dateSignedTabs", Json.createArrayBuilder()
-												.add(Json.createObjectBuilder()
-														.add("documentId", "1")
-														.add("anchorString", "APPLICANT'S SIGNATURE")
-														.add("anchorXOffset", "550")
-														.add("anchorYOffset", "12")
-														.add("anchorUnits", "pixels"))
-												.add(Json.createObjectBuilder()
-														.add("documentId", "1")
-														.add("anchorString", "DATE SIGNED")
-														.add("anchorXOffset", "0")
-														.add("anchorYOffset", "-11")
-														.add("anchorUnits", "pixels")))
-										.add("fullNameTabs", Json.createArrayBuilder()
-												.add(Json.createObjectBuilder()
-														.add("documentId", "1")
-														.add("anchorString", "INSURED NAME - PRINT")
-														.add("anchorXOffset", "0")
-														.add("anchorYOffset", "-11")
-														.add("anchorUnits", "pixels")))
-										))))
-				.build().toString();
+		final DateSignedTab[] dateSignedTabs = {
+				new DateSignedTab(documentId, "APPLICANT'S SIGNATURE", "550", "12", "pixels"),
+				new DateSignedTab(documentId, "DATE SIGNED", "0", "-11", "pixels")};
 		
-		return multipartRequest(body, pdf);
+		final FullNameTab[] fullNameTabs = {
+				new FullNameTab(documentId, "INSURED NAME - PRINT", "0", "-11", "pixels")};
+		
+		return new Tabs(signHereTabs, dateSignedTabs, fullNameTabs);
+	}
+	
+	public String requestSignature(Envelope envelope, List<DocumentVO> documents) throws IOException {
+		return multipartRequest(gson.toJson(envelope), documents);
+	}
+	
+	private String multipartRequest(String body, List<DocumentVO> documents) throws IOException {
+		StringBuilder result = new StringBuilder();
+		
+		String url = "https://demo.docusign.net/restapi/v2/accounts/1273564/envelopes";
+		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+		conn.setRequestMethod("POST");
+		conn.setRequestProperty("X-DocuSign-Authentication", getAuthHeader());
+		conn.setRequestProperty("Accept", "application/json");
+		conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=BOUNDARY");
+		conn.setDoOutput(true);
+		
+		// start constructing the multipart/form-data request...
+		String requestBody = "\r\n\r\n--BOUNDARY\r\n" + "Content-Type: application/json\r\n"
+				+ "Content-Disposition: form-data\r\n" + "\r\n" + body; 
+		
+		DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
+		dos.writeBytes(requestBody);
+		for(DocumentVO document : documents) {
+			dos.writeBytes("\r\n\r\n--BOUNDARY\r\n" + 
+					"Content-Type: application/pdf \r\n" + 
+					"Content-Disposition: file; filename=\"" + document.getName() + 
+					"\"; documentid=" + document.getId() + "\r\n" + "\r\n");
+			
+			InputStream inputStream = new FileInputStream(document.getFile());
+			byte[] bytes = new byte[(int) document.getFile().length()];
+			inputStream.read(bytes);
+			inputStream.close();
+			dos.write(bytes);
+		}
+		dos.writeBytes("\r\n" + "--BOUNDARY--\r\n\r\n");
+		dos.flush();
+		dos.close();
+		
+		result.append("Sending signature request from template...\n");
+		result.append(requestBody);
+		
+		result.append("\n\n-- Signature Request response --\n\n");
+		int status = conn.getResponseCode(); // triggers the request
+		if( status == 201 ) {	// 201 = Created
+			result.append(gson.toJson(getResponseBody(conn)));
+		}
+		else {
+			JsonParser parser = new JsonParser();
+			JsonObject json = parser.parse(errorParse(conn, status)).getAsJsonObject();
+			result.append(gson.toJson(json));
+		}
+		
+		return result.toString();
 	}
 	
 	
@@ -543,14 +565,17 @@ public class DocuSignService {
 		
 		result.append("Sending signature request from template...\n");
 		result.append(requestBody);
+		
+		result.append("\n\n-- Signature Request response --\n\n");
 		int status = conn.getResponseCode(); // triggers the request
-		if( status != 201 )	// 201 = Created
-		{
-			result.append(errorParse(conn, status));
-			return result.toString();
+		if( status == 201 ) {	// 201 = Created
+			result.append(gson.toJson(getResponseBody(conn)));
 		}
-		 
-		result.append("\n\n-- Signature Request response --\n\n" + getResponseBody(conn));
+		else {
+			JsonParser parser = new JsonParser();
+			JsonObject json = parser.parse(errorParse(conn, status)).getAsJsonObject();
+			result.append(gson.toJson(json));
+		}
 		
 		return result.toString();
 	}
@@ -627,7 +652,7 @@ public class DocuSignService {
 			line = null;
 			while ((line = br.readLine()) != null)
 				responseError.append(line);
-			return "\nError description:  \n" + responseError.toString();
+			return responseError.toString();
 		} catch (Exception e) {
 			// lazy code
 			throw new RuntimeException(e);
