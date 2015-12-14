@@ -1,5 +1,7 @@
 package com.stillwaterinsurance.docusign.vo;
 
+import com.stillwaterinsurance.docusign.vo.Recipients.Signer;
+
 public final class CompositeTemplate {
 	
 	public final ServerTemplate serverTemplates[];
@@ -36,6 +38,11 @@ public final class CompositeTemplate {
 		public InlineTemplate(String sequence, Recipients recipients) {
 			this.sequence = sequence;
 			this.recipients = recipients;
+		}
+		
+		public InlineTemplate(String sequence, Signer signer) {
+			this.sequence = sequence;
+			this.recipients = new Recipients(signer);
 		}
 	}
 	

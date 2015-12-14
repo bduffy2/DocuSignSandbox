@@ -8,6 +8,10 @@ public final class Recipients {
 		this.signers = signers;
 	}
 	
+	public Recipients(Signer signer) {
+		this.signers = new Signer[]{signer};
+	}
+	
 	public static class Signer {
 		
 		public final String recipientId;
@@ -18,6 +22,14 @@ public final class Recipients {
 
 		public Signer(String recipientId, String name, String email, String roleName, Tabs tabs) {
 			this.recipientId = recipientId;
+			this.name = name;
+			this.email = email;
+			this.roleName = roleName;
+			this.tabs = tabs;
+		}
+		
+		public Signer(String name, String email, String roleName, Tabs tabs) {
+			this.recipientId = "1";
 			this.name = name;
 			this.email = email;
 			this.roleName = roleName;

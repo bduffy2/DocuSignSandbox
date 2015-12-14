@@ -26,7 +26,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.xml.sax.InputSource;
 
@@ -46,25 +45,12 @@ public class DocuSignService {
 	
 	private static final Logger LOGGER = Logger.getLogger(DocuSignService.class);
 	
-	@Value("${credentials.integratorKey}")
-	private String integratorKey;
+	private static final String API_KEY = "BRAN-b5d4c55d-d6f5-40e8-be03-82d6382169aa";
+	private static final String API_USERNAME = "brandon.duffy@stillwater.com";
+	private static final String API_PASSWORD = "brandon";
+	private static final String API_ACCOUNT_ID = "1273564";
 	
-	@Value("${credentials.username}")
-	private String username;
-	
-	@Value("${credentials.password}")
-	private String password;
-	
-	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-	
-	public DocuSignService() {}
-	
-	public DocuSignService(String integratorKey, String username, String password) {
-		this.integratorKey = integratorKey;
-		this.username = username;
-		this.password = password;
-	}
-	
+	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	
 	public String loginRequest() throws IOException {
 		StringBuilder result = new StringBuilder();
@@ -307,7 +293,7 @@ public class DocuSignService {
 				.add("templateRoles", templateRoles)
 				.build().toString();
 		
-		String url = "https://demo.docusign.net/restapi/v2/accounts/1273564/envelopes";
+		String url = "https://demo.docusign.net/restapi/v2/accounts/" + API_ACCOUNT_ID + "/envelopes";
 		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 		conn.setRequestMethod("POST");
 		conn.setRequestProperty("X-DocuSign-Authentication", getAuthHeader());
@@ -472,13 +458,13 @@ public class DocuSignService {
 	}
 	
 	public String requestSignature(Envelope envelope, List<DocumentVO> documents) throws IOException {
-		return multipartRequest(gson.toJson(envelope), documents);
+		return multipartRequest(GSON.toJson(envelope), documents);
 	}
 	
 	private String multipartRequest(String body, List<DocumentVO> documents) throws IOException {
 		StringBuilder result = new StringBuilder();
 		
-		String url = "https://demo.docusign.net/restapi/v2/accounts/1273564/envelopes";
+		String url = "https://demo.docusign.net/restapi/v2/accounts/" + API_ACCOUNT_ID + "/envelopes";
 		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 		conn.setRequestMethod("POST");
 		conn.setRequestProperty("X-DocuSign-Authentication", getAuthHeader());
@@ -512,16 +498,17 @@ public class DocuSignService {
 		result.append(requestBody);
 		
 		result.append("\n\n-- Signature Request response --\n\n");
+		JsonParser parser = new JsonParser();
+		JsonObject json;
 		int status = conn.getResponseCode(); // triggers the request
-		if( status == 201 ) {	// 201 = Created
-			result.append(gson.toJson(getResponseBody(conn)));
+		if( status == 201 ) { // 201 = Created
+			json = parser.parse(getResponseBody(conn)).getAsJsonObject();
 		}
 		else {
-			JsonParser parser = new JsonParser();
-			JsonObject json = parser.parse(errorParse(conn, status)).getAsJsonObject();
-			result.append(gson.toJson(json));
+			json = parser.parse(errorParse(conn, status)).getAsJsonObject();
 		}
 		
+		result.append(GSON.toJson(json));
 		return result.toString();
 	}
 	
@@ -536,7 +523,7 @@ public class DocuSignService {
 	private String multipartRequest(String body, File pdf) throws MalformedURLException, IOException {
 		StringBuilder result = new StringBuilder();
 		
-		String url = "https://demo.docusign.net/restapi/v2/accounts/1273564/envelopes";
+		String url = "https://demo.docusign.net/restapi/v2/accounts/" + API_ACCOUNT_ID + "/envelopes";
 		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 		conn.setRequestMethod("POST");
 		conn.setRequestProperty("X-DocuSign-Authentication", getAuthHeader());
@@ -567,24 +554,25 @@ public class DocuSignService {
 		result.append(requestBody);
 		
 		result.append("\n\n-- Signature Request response --\n\n");
+		JsonParser parser = new JsonParser();
+		JsonObject json;
 		int status = conn.getResponseCode(); // triggers the request
-		if( status == 201 ) {	// 201 = Created
-			result.append(gson.toJson(getResponseBody(conn)));
+		if( status == 201 ) { // 201 = Created
+			json = parser.parse(getResponseBody(conn)).getAsJsonObject();
 		}
 		else {
-			JsonParser parser = new JsonParser();
-			JsonObject json = parser.parse(errorParse(conn, status)).getAsJsonObject();
-			result.append(gson.toJson(json));
+			json = parser.parse(errorParse(conn, status)).getAsJsonObject();
 		}
 		
+		result.append(GSON.toJson(json));
 		return result.toString();
 	}
 	
 	private String getAuthHeader() {
 		return	"<DocuSignCredentials>" + 
-					"<Username>" + username + "</Username>" +
-					"<Password>" + password + "</Password>" + 
-					"<IntegratorKey>" + integratorKey + "</IntegratorKey>" + 
+					"<Username>" + API_USERNAME + "</Username>" +
+					"<Password>" + API_PASSWORD + "</Password>" + 
+					"<IntegratorKey>" + API_KEY + "</IntegratorKey>" + 
 				"</DocuSignCredentials>";
 	}
 	

@@ -16,8 +16,7 @@ import com.stillwaterinsurance.docusign.vo.Recipients.Signer;
 
 public class TestDocuSignService {
 
-	private static final DocuSignService signatureService = new DocuSignService(
-			"BRAN-b5d4c55d-d6f5-40e8-be03-82d6382169aa", "brandon.duffy@stillwater.com", "brandon");
+	private static final DocuSignService signatureService = new DocuSignService();
 	
 	@Test
 	public void testCompTemplateAcord() {
@@ -145,19 +144,22 @@ public class TestDocuSignService {
 	@Test
 	public void testRequestSignatureAcordOlderHomeBundle() {
 		
+		final String insuredName = "Jack Trice";
+		final String insuredEmail = "brandon.duffy@stillwater.com";
+		
 		// Older Home
 		final ServerTemplate[] serverTemplates1 = {new OlderHomeServerTemplate("1")};
-		final Signer[] signers1 = {new Signer("1", "Jack Trice", "brandon.duffy@stillwater.com", "Insured", null)};
-		final InlineTemplate[] inlineTemplates1 = {new InlineTemplate("1", new Recipients(signers1))};
+		final Signer insured = new Signer(insuredName, insuredEmail, "Insured", null);
+		final InlineTemplate[] inlineTemplates1 = {new InlineTemplate("1", insured)};
 		final CompositeTemplate olderHomeTemplate = new CompositeTemplate(serverTemplates1, inlineTemplates1, null);
 		
 		// Acord App
 		final Document acordApp = new Document("1", "ACORD Application/Underwriting Confirmation");
 		final Document[] documents = {acordApp};
 		
-		final Signer[] signers2 = {new Signer("1", "Jack Trice", "brandon.duffy@stillwater.com", null, 
-				DocuSignService.createAcordTabs(documents[0].documentId))};
-		final InlineTemplate[] inlineTemplates2 = {new InlineTemplate("1", new Recipients(signers2))};
+		final Signer signer2 = new Signer(insuredName, insuredEmail, null, 
+				DocuSignService.createAcordTabs(documents[0].documentId));
+		final InlineTemplate[] inlineTemplates2 = {new InlineTemplate("1", signer2)};
 		final CompositeTemplate acordTemplate = new CompositeTemplate(null, inlineTemplates2, documents[0]);
 		
 		final CompositeTemplate[] compositeTemplates = {olderHomeTemplate, acordTemplate};
